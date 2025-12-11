@@ -1,22 +1,15 @@
-// src/screens/HistoryScreen.tsx - UPDATED to use custom daily limits
-import React, { useState, useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {
-  View,
+  Dimensions,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  Dimensions,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { LineChart } from "react-native-chart-kit";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface DailyTotal {
   [date: string]: number;
@@ -144,17 +137,15 @@ export default function HistoryScreen() {
 
   // Calculate stats with safe number handling - USE CUSTOM DAILY LIMIT
   const validTotals = Object.values(dailyTotals)
-    .filter((total) => !isNaN(Number(total)) && isFinite(Number(total)))
-    .map((total) => Number(total));
+    .filter(total => !isNaN(Number(total)) && isFinite(Number(total)))
+    .map(total => Number(total));
 
   const totalDays = validTotals.length;
   const averageIntake =
     totalDays > 0
       ? Math.round(validTotals.reduce((a, b) => a + b, 0) / totalDays)
       : 0;
-  const daysOverLimit = validTotals.filter(
-    (total) => total > dailyLimit
-  ).length; // USE CUSTOM LIMIT
+  const daysOverLimit = validTotals.filter(total => total > dailyLimit).length; // USE CUSTOM LIMIT
   const maxIntake = validTotals.length > 0 ? Math.max(...validTotals) : 0;
 
   if (loading) {

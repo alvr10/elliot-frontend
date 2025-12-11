@@ -1,19 +1,18 @@
-// src/screens/CustomDrinkScreen.tsx
+import { useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import * as Haptics from "expo-haptics";
 
 const categories = [
   { value: "coffee", label: "Coffee" },
@@ -216,7 +215,7 @@ export default function CustomDrinkScreen() {
                 contentContainerStyle={{ paddingVertical: 4 }}
               >
                 <View className="flex-row space-x-3">
-                  {categories.map((cat) => (
+                  {categories.map(cat => (
                     <TouchableOpacity
                       key={cat.value}
                       onPress={() => setCategory(cat.value)}

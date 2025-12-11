@@ -1,18 +1,17 @@
-// src/screens/DailyLimitScreen.tsx
-import React, { useState, useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
   ActivityIndicator,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import * as Haptics from "expo-haptics";
 
 const presetLimits = [
   { value: 200, label: "Low (200mg)", description: "1-2 cups of coffee" },
@@ -59,7 +58,7 @@ export default function DailyLimitScreen() {
         setSelectedLimit(limit);
 
         // Check if it's a preset or custom
-        const isPreset = presetLimits.some((p) => p.value === limit);
+        const isPreset = presetLimits.some(p => p.value === limit);
         setIsCustom(!isPreset);
         if (!isPreset) {
           setCustomLimit(limit.toString());
@@ -159,7 +158,7 @@ export default function DailyLimitScreen() {
             Preset Limits
           </Text>
           <View className="space-y-3 mb-6">
-            {presetLimits.map((preset) => (
+            {presetLimits.map(preset => (
               <TouchableOpacity
                 key={preset.value}
                 onPress={() => {

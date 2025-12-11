@@ -1,20 +1,19 @@
-// src/screens/HomeScreen.tsx - UPDATED with custom daily limits
-import React, { useState, useEffect } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { createClient } from "@supabase/supabase-js";
+import * as Haptics from "expo-haptics";
+import React, { useState } from "react";
 import {
-  View,
+  RefreshControl,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  RefreshControl,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import CircularProgress from "../components/CircularProgress";
 import IntakeLogItem from "../components/IntakeLogItem";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import { createClient } from "@supabase/supabase-js";
-import * as Haptics from "expo-haptics";
 
 const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
@@ -152,7 +151,7 @@ export default function HomeScreen() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            drink_id: quickDrinks.find((d) => d.name === drinkName)?.id,
+            drink_id: quickDrinks.find(d => d.name === drinkName)?.id,
             servings: 1,
           }),
         }
@@ -268,16 +267,16 @@ export default function HomeScreen() {
               isOverLimit
                 ? "bg-red-900 border-red-700"
                 : caffeinePercentage > 75
-                ? "bg-yellow-900 border-yellow-700"
-                : "bg-gray-900 border-gray-700"
+                  ? "bg-yellow-900 border-yellow-700"
+                  : "bg-gray-900 border-gray-700"
             }`}
           >
             <Text className="text-white text-center font-medium">
               {isOverLimit
                 ? `⚠️ Over your ${dailyLimit}mg daily limit - Consider reducing intake`
                 : caffeinePercentage > 75
-                ? `🟡 Approaching your ${dailyLimit}mg daily limit`
-                : `✅ Within your ${dailyLimit}mg daily limit`}
+                  ? `🟡 Approaching your ${dailyLimit}mg daily limit`
+                  : `✅ Within your ${dailyLimit}mg daily limit`}
             </Text>
           </View>
         </View>
@@ -298,7 +297,7 @@ export default function HomeScreen() {
         <View className="px-6 mb-6">
           <Text className="text-gray-400 text-sm mb-3">Quick Add</Text>
           <View className="flex-row space-x-3">
-            {quickDrinks.map((drink) => (
+            {quickDrinks.map(drink => (
               <TouchableOpacity
                 key={drink.name}
                 onPress={() => quickAddIntake(drink.name, drink.caffeine)}
@@ -334,7 +333,7 @@ export default function HomeScreen() {
               Today's History
             </Text>
             <View className="space-y-3">
-              {dailyIntake.logs.map((log) => (
+              {dailyIntake.logs.map(log => (
                 <IntakeLogItem
                   key={log.id}
                   log={log}

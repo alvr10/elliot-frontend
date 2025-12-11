@@ -1,30 +1,28 @@
-// App.tsx - ADD DailyLimitScreen to imports and navigation
-import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StatusBar } from "expo-status-bar";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StripeProvider } from "@stripe/stripe-react-native";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
-import { SubscriptionProvider } from "./src/context/SubscriptionContext";
 import { NotificationProvider } from "./src/context/NotificationContext";
+import { SubscriptionProvider } from "./src/context/SubscriptionContext";
 
 // Screens
-import OnboardingScreen from "./src/screens/OnboardingScreen";
-import PaywallScreen from "./src/screens/PaywallScreen";
-import HomeScreen from "./src/screens/HomeScreen";
 import AddIntakeScreen from "./src/screens/AddIntakeScreen";
 import CustomDrinkScreen from "./src/screens/CustomDrinkScreen";
-import ManageCustomDrinksScreen from "./src/screens/ManageCustomDrinksScreen";
 import HistoryScreen from "./src/screens/HistoryScreen";
-import SettingsScreen from "./src/screens/SettingsScreen";
-import DailyLimitScreen from "./src/screens/DailyLimitScreen"; // ADD THIS LINE
+import HomeScreen from "./src/screens/HomeScreen";
 import LoadingScreen from "./src/screens/LoadingScreen";
+import ManageCustomDrinksScreen from "./src/screens/ManageCustomDrinksScreen";
+import OnboardingScreen from "./src/screens/OnboardingScreen";
+import PaywallScreen from "./src/screens/PaywallScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
-  const { user, subscription, loading } = useAuth();
+  const { user, subscription, loading, subscriptionLoading } = useAuth();
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(
     null
   );
@@ -60,7 +58,18 @@ function AppNavigator() {
     }
   };
 
-  if (loading || checkingOnboarding || hasSeenOnboarding === null) {
+  // Show loading screen while checking onboarding, auth, or subscription status
+  if (checkingOnboarding || hasSeenOnboarding === null) {
+    return <LoadingScreen />;
+  }
+
+  // Show loading while auth is loading
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  // Show loading while user exists but subscription is still being fetched
+  if (user && subscriptionLoading) {
     return <LoadingScreen />;
   }
 
@@ -69,6 +78,15 @@ function AppNavigator() {
     subscription?.status === "active" ||
     subscription?.status === "active_until_period_end";
 
+  console.log("Navigation decision:", {
+    hasSeenOnboarding,
+    user: user ? "exists" : "none",
+    subscriptionStatus: subscription?.status || "unknown",
+    hasActiveSubscription,
+    loading,
+    subscriptionLoading,
+  });
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -76,7 +94,7 @@ function AppNavigator() {
           // Onboarding flow
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         ) : !user || !hasActiveSubscription ? (
-          // Payment/Auth flow
+          // Payment/Auth flow - only shown after we've confirmed subscription status
           <Stack.Screen name="Paywall" component={PaywallScreen} />
         ) : (
           // Main app flow
@@ -90,7 +108,6 @@ function AppNavigator() {
             />
             <Stack.Screen name="History" component={HistoryScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="DailyLimit" component={DailyLimitScreen} />
           </>
         )}
       </Stack.Navigator>

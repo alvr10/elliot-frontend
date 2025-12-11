@@ -1,15 +1,14 @@
-// UPDATE src/screens/SettingsScreen.tsx - Add reactivation and better status display
+import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
   Alert,
   Linking,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
 
@@ -254,7 +253,7 @@ export default function SettingsScreen() {
 
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-gray-400 text-sm">Price</Text>
-                <Text className="text-white text-base">€5.99/month</Text>
+                <Text className="text-white text-base">€2.99/month</Text>
               </View>
 
               {subscription?.expires_at && (
@@ -280,8 +279,8 @@ export default function SettingsScreen() {
             <View className="bg-yellow-900 border border-yellow-700 p-4 rounded-lg mb-4">
               <Text className="text-yellow-300 text-center text-sm">
                 ⚠️ Your subscription is cancelled and will end on{" "}
-                {formatDate(subscription?.expires_at)}. You won't be charged
-                again unless you reactivate.
+                {formatDate(subscription?.expires_at)}. You won&apos;t be
+                charged again unless you reactivate.
               </Text>
             </View>
           )}

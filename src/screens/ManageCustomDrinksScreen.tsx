@@ -1,18 +1,17 @@
-// src/screens/ManageCustomDrinksScreen.tsx
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import * as Haptics from "expo-haptics";
 
 interface CustomDrink {
   id: number;
@@ -114,7 +113,7 @@ export default function ManageCustomDrinksScreen() {
 
       if (response.ok) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        setCustomDrinks((prev) => prev.filter((drink) => drink.id !== drinkId));
+        setCustomDrinks(prev => prev.filter(drink => drink.id !== drinkId));
         showNotification("Custom drink deleted", "success");
       } else {
         const errorData = await response.json();
@@ -185,7 +184,7 @@ export default function ManageCustomDrinksScreen() {
             </Text>
 
             <View className="space-y-4">
-              {customDrinks.map((drink) => (
+              {customDrinks.map(drink => (
                 <View
                   key={drink.id}
                   className="bg-gray-900 border border-gray-700 p-4 rounded-lg"

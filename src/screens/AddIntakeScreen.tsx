@@ -1,19 +1,18 @@
-// src/screens/AddIntakeScreen.tsx - Updated with custom drinks and notifications
-import React, { useState, useEffect } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
   ActivityIndicator,
   Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import * as Haptics from "expo-haptics";
 
 interface Drink {
   id: number;
@@ -208,7 +207,7 @@ export default function AddIntakeScreen() {
       return [];
     }
 
-    return drinks.filter((drink) => {
+    return drinks.filter(drink => {
       const matchesSearch =
         drink.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (drink.brand &&
@@ -280,7 +279,7 @@ export default function AddIntakeScreen() {
           contentContainerStyle={{ paddingVertical: 4 }}
         >
           <View className="flex-row space-x-2">
-            {categories.map((category) => (
+            {categories.map(category => (
               <TouchableOpacity
                 key={category}
                 onPress={() => setSelectedCategory(category)}
@@ -344,7 +343,7 @@ export default function AddIntakeScreen() {
             </View>
           ) : (
             <View className="space-y-3">
-              {filteredDrinks.map((drink) => (
+              {filteredDrinks.map(drink => (
                 <TouchableOpacity
                   key={drink.id}
                   onPress={() => setSelectedDrink(drink)}

@@ -1,9 +1,8 @@
-// src/components/IntakeLogItem.tsx - Updated with notifications
+import * as Haptics from "expo-haptics";
 import React from "react";
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import * as Haptics from "expo-haptics";
 
 interface IntakeLog {
   id: number;

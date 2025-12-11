@@ -1,4 +1,4 @@
-// src/screens/PaywallScreen.tsx (PREMIUM STEP-BY-STEP FLOW)
+// src/screens/PaywallScreen.tsx (FIXED - Better state handling)
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -47,8 +47,9 @@ export default function PaywallScreen() {
     user,
     subscription,
     refreshSubscription,
+    subscriptionLoading,
   } = useAuth();
-  const { createSubscription, loading: subscriptionLoading } =
+  const { createSubscription, loading: subscriptionCreationLoading } =
     useSubscription();
 
   const [currentStep, setCurrentStep] = useState<FlowStep>("landing");
@@ -59,9 +60,15 @@ export default function PaywallScreen() {
 
   // Auto-progress based on user state
   useEffect(() => {
+    // Don't make navigation decisions while subscription is loading
+    if (subscriptionLoading) {
+      console.log("Subscription loading, waiting...");
+      return;
+    }
+
     if (user && subscription?.status === "active") {
-      // User is signed in and subscribed - should redirect to app
-      // This will be handled by App.tsx navigation logic
+      console.log("User has active subscription, should redirect to app");
+      // User is signed in and subscribed - App.tsx will handle redirect
       return;
     }
 
@@ -70,13 +77,17 @@ export default function PaywallScreen() {
       subscription?.status !== "active" &&
       subscription?.status !== "active_until_period_end"
     ) {
+      console.log(
+        "User signed in but no active subscription, going to subscription step"
+      );
       // User signed in but not subscribed - go to subscription step
       setCurrentStep("subscription");
     } else if (!user && currentStep === "subscription") {
+      console.log("User signed out, going back to auth");
       // User signed out - go back to auth
       setCurrentStep("auth");
     }
-  }, [user, subscription]);
+  }, [user, subscription, subscriptionLoading]);
 
   const handleStartJourney = () => {
     setCurrentStep("auth");
@@ -103,12 +114,16 @@ export default function PaywallScreen() {
     try {
       if (authMode === "signup") {
         await signUpWithEmail(email, password);
-        // After successful signup, proceed to subscription
-        setCurrentStep("subscription");
+        // Wait for subscription status to be fetched before proceeding
+        setTimeout(async () => {
+          await refreshSubscription();
+        }, 1000);
       } else {
         await signInWithEmail(email, password);
-        // After signin, check subscription status and proceed accordingly
-        await refreshSubscription();
+        // Wait for subscription status to be fetched
+        setTimeout(async () => {
+          await refreshSubscription();
+        }, 1000);
       }
     } catch (error: any) {
       Alert.alert("Error", error.message);
@@ -128,6 +143,18 @@ export default function PaywallScreen() {
       Alert.alert("Error", "Unable to process subscription. Please try again.");
     }
   };
+
+  // Show loading if subscription status is being fetched for signed-in user
+  if (user && subscriptionLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-black justify-center items-center">
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text className="text-white text-lg mt-4">
+          Checking subscription status...
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   // STEP 1: LANDING PAGE
   if (currentStep === "landing") {
@@ -198,7 +225,7 @@ export default function PaywallScreen() {
           <View className="mx-6 mb-8">
             <View className="bg-white p-6 rounded-lg">
               <Text className="text-black text-2xl font-bold text-center mb-2">
-                €5.99/month
+                €2.99/month
               </Text>
               <Text className="text-gray-600 text-center mb-4">
                 Full access to all features
@@ -238,8 +265,6 @@ export default function PaywallScreen() {
             <TouchableOpacity
               onPress={async () => {
                 await AsyncStorage.removeItem("hasSeenOnboarding");
-                // Force app restart by clearing auth
-                // You can also add: await signOut();
                 Alert.alert("Debug", "Onboarding reset! Restart the app.");
               }}
               className="bg-red-600 p-3 rounded-lg m-4"
@@ -416,7 +441,7 @@ export default function PaywallScreen() {
             {/* Pricing Card */}
             <View className="bg-white p-6 rounded-lg mb-6">
               <Text className="text-black text-2xl font-bold text-center mb-2">
-                €5.99/month
+                €2.99/month
               </Text>
               <Text className="text-gray-600 text-center mb-4">
                 Full access • Cancel anytime
@@ -429,12 +454,12 @@ export default function PaywallScreen() {
             {/* Subscribe Button */}
             <TouchableOpacity
               onPress={handleSubscribe}
-              disabled={subscriptionLoading}
+              disabled={subscriptionCreationLoading}
               className={`py-4 rounded-lg mb-4 ${
-                subscriptionLoading ? "bg-gray-700" : "bg-white"
+                subscriptionCreationLoading ? "bg-gray-700" : "bg-white"
               }`}
             >
-              {subscriptionLoading ? (
+              {subscriptionCreationLoading ? (
                 <View className="flex-row justify-center items-center">
                   <ActivityIndicator size="small" color="#000" />
                   <Text className="text-black text-lg font-bold ml-2">

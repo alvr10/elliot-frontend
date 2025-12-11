@@ -1,8 +1,7 @@
-// src/context/SubscriptionContext.tsx (UPDATED - Better incomplete handling)
-import React, { createContext, useContext } from "react";
 import { useStripe } from "@stripe/stripe-react-native";
-import { useAuth } from "./AuthContext";
+import React, { createContext, useContext } from "react";
 import { Alert } from "react-native";
+import { useAuth } from "./AuthContext";
 
 interface SubscriptionContextType {
   createSubscription: () => Promise<boolean>;
@@ -182,7 +181,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("Payment confirmed, checking final status...");
 
         // Wait a moment for webhook to process
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       // Check if subscription is actually active
@@ -204,7 +203,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
       await refreshSubscription();
 
       // Double-check the subscription status after refresh
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       Alert.alert(
         "Success!",

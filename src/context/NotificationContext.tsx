@@ -1,9 +1,11 @@
-// src/context/NotificationContext.tsx
 import React, { createContext, useContext, useState } from "react";
 import FloatingNotification from "../components/FloatingNotification";
 
 interface NotificationContextType {
-  showNotification: (message: string, type: "success" | "error" | "info") => void;
+  showNotification: (
+    message: string,
+    type: "success" | "error" | "info"
+  ) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -23,7 +25,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     visible: false,
   });
 
-  const showNotification = (message: string, type: "success" | "error" | "info") => {
+  const showNotification = (
+    message: string,
+    type: "success" | "error" | "info"
+  ) => {
     setNotification({
       message,
       type,
@@ -51,7 +56,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error("useNotification must be used within a NotificationProvider");
+    throw new Error(
+      "useNotification must be used within a NotificationProvider"
+    );
   }
   return context;
 };

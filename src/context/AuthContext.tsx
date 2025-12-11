@@ -1,7 +1,6 @@
-// src/context/AuthContext.tsx (COMPLETED)
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createClient } from "@supabase/supabase-js";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 const supabase = createClient(
@@ -29,6 +28,7 @@ interface AuthContextType {
   user: User | null;
   subscription: Subscription | null;
   loading: boolean;
+  subscriptionLoading: boolean; // NEW: Separate loading state for subscription
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false); // NEW
 
   useEffect(() => {
     // Get initial session
@@ -55,8 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           email: session.user.email!,
         });
         fetchSubscriptionStatus(session.access_token);
+      } else {
+        setLoading(false); // No user, done loading
       }
-      setLoading(false);
     });
 
     // Listen for auth changes
@@ -75,12 +77,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           id: session.user.id,
           email: session.user.email!,
         });
+        // Fetch subscription status for signed in user
         await fetchSubscriptionStatus(session.access_token);
       } else if (event === "SIGNED_OUT") {
         setUser(null);
         setSubscription(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => authSubscription.unsubscribe();
@@ -135,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const fetchSubscriptionStatus = async (token: string) => {
+    setSubscriptionLoading(true); // NEW: Set subscription loading
     try {
       console.log("Fetching subscription status...");
       const response = await fetch(
@@ -152,16 +156,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await response.json();
         console.log("Subscription data:", data);
 
-        // Only consider active and trialing as valid subscriptions
-        if (
-          data.status === "active" ||
-          data.status === "active_until_period_end" ||
-          data.status === "trialing"
-        ) {
-          setSubscription(data);
-        } else {
-          setSubscription({ status: "inactive" });
-        }
+        // Set subscription data regardless of status
+        setSubscription(data);
       } else {
         const errorText = await response.text();
         console.error("Subscription status error:", errorText);
@@ -170,6 +166,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error("Failed to fetch subscription status:", error);
       setSubscription({ status: "inactive" });
+    } finally {
+      setSubscriptionLoading(false); // NEW: Clear subscription loading
+      setLoading(false); // Clear main loading after subscription check
     }
   };
 
@@ -184,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (error) throw error;
 
       console.log("Sign in successful:", data.user?.email);
+      // Don't set loading to false here - let the auth state change handle it
     } catch (error: any) {
       console.error("Error signing in:", error);
       throw new Error(error.message || "Failed to sign in");
@@ -237,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         user,
         subscription,
         loading,
+        subscriptionLoading, // NEW: Expose subscription loading state
         signInWithEmail,
         signUpWithEmail,
         signOut,

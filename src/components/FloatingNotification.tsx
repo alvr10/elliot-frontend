@@ -1,6 +1,5 @@
-// src/components/FloatingNotification.tsx
 import React, { useEffect, useRef } from "react";
-import { View, Text, Animated, Dimensions } from "react-native";
+import { Animated, Dimensions, Text, View } from "react-native";
 
 interface FloatingNotificationProps {
   message: string;
