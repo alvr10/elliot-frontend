@@ -1,7 +1,7 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, Typography } from "../constants";
+import { AppTheme, Spacing, Typography } from "../constants";
 import Button from "./Button";
 import FeatureList from "./FeatureList";
 import ProgressBar from "./ProgressBar";
@@ -89,7 +89,7 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: AppTheme.background,
   },
   scrollView: {
     flex: 1,
@@ -106,62 +106,62 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   subscriptionTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size["3xl"],
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
   subscriptionSubtitle: {
-    color: Colors.gray300,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.lg,
     textAlign: "center",
     marginBottom: Spacing.xs,
   },
   subscriptionNote: {
-    color: Colors.gray400,
+    color: AppTheme.text.secondary,
     textAlign: "center",
   },
   benefitsBox: {
-    backgroundColor: Colors.gray900,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.lg,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.gray700,
+    borderColor: AppTheme.border,
     marginBottom: Spacing["2xl"],
   },
   benefitsTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
   pricingCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.lg,
     borderRadius: 8,
     marginBottom: Spacing.lg,
   },
   pricingAmount: {
-    color: Colors.black,
+    color: AppTheme.text.inverse,
     fontSize: Typography.size["2xl"],
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.xs,
   },
   pricingDescription: {
-    color: Colors.gray600,
+    color: AppTheme.text.secondary,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
   pricingNote: {
-    color: Colors.gray700,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.sm,
     textAlign: "center",
   },
   subscriptionFooter: {
-    color: Colors.gray500,
+    color: AppTheme.text.disabled,
     fontSize: Typography.size.xs,
     textAlign: "center",
   },

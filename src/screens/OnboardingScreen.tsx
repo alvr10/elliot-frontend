@@ -1,151 +1,42 @@
+import Button from "@/components/Button";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
-import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppTheme, Colors, Spacing, Typography } from "../constants";
 
 const { width } = Dimensions.get("window");
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xl,
-  },
-  progressContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: Spacing.xl,
-  },
-  progressBar: {
-    height: 2,
-    borderRadius: 1,
-    marginHorizontal: Spacing.xs,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  titleContainer: {
-    alignItems: "center",
-    marginBottom: Spacing["3xl"],
-  },
-  title: {
-    fontSize: Typography.size["3xl"],
-    fontWeight: Typography.weight.bold,
-    textAlign: "center",
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontSize: Typography.size.lg,
-    textAlign: "center",
-    marginBottom: Spacing.xl,
-  },
-  textContainer: {
-    marginBottom: Spacing.xl,
-  },
-  contentText: {
-    fontSize: Typography.size.base,
-    lineHeight: Typography.lineHeight.normal,
-    textAlign: "center",
-    marginBottom: Spacing.lg,
-  },
-  warningBox: {
-    padding: Spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  warningText: {
-    fontSize: Typography.size.sm,
-    fontStyle: "italic",
-    textAlign: "center",
-  },
-  statsBox: {
-    padding: Spacing.lg,
-    borderRadius: 8,
-    marginBottom: Spacing.xl,
-  },
-  statsTitle: {
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    textAlign: "center",
-    marginBottom: Spacing.md,
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: Spacing.sm,
-  },
-  statsLabel: {
-    fontSize: Typography.size.base,
-  },
-  statsValue: {
-    fontSize: Typography.size.base,
-    fontWeight: Typography.weight.semibold,
-  },
-  button: {
-    backgroundColor: Colors.white,
-    paddingVertical: Spacing.md,
-    borderRadius: 8,
-    marginHorizontal: Spacing.md,
-  },
-  lastButton: {
-    marginBottom: Spacing.lg,
-  },
-  buttonText: {
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    textAlign: "center",
-  },
-  skipButton: {
-    marginTop: Spacing.md,
-  },
-  skipText: {
-    textAlign: "center",
-    fontSize: Typography.size.sm,
-  },
-});
-
 const onboardingData = [
   {
-    title: "The Hidden Danger",
-    subtitle: "Caffeine addiction is real—and it's affecting millions",
+    title: "El Peligro Oculto",
+    subtitle: "La adicción a la cafeína es real y afecta a millones",
     content:
-      "Over 90% of adults consume caffeine daily, often without realizing they're dependent. Withdrawal symptoms, anxiety, and sleep disruption are just the beginning.",
-    warning: "Are you in control, or is caffeine controlling you?",
+      "Más del 90% de los adultos consumen cafeína diariamente, a menudo sin darse cuenta de que son dependientes. Los síntomas de abstinencia, la ansiedad y los trastornos del sueño son solo el comienzo.",
+    warning: "¿Estás en control, o es la cafeína la que te controla?",
   },
   {
-    title: "Your Health at Risk",
-    subtitle: "Excessive caffeine consumption has serious consequences",
+    title: "Tu Salud en Riesgo",
+    subtitle: "El consumo excesivo de cafeína tiene consecuencias graves",
     content:
-      "Heart palpitations, insomnia, digestive issues, and increased anxiety. The recommended limit is 400mg daily—most people exceed this without knowing.",
-    warning: "Every extra milligram pushes you closer to dependency.",
+      "Palpitaciones cardíacas, insomnio, problemas digestivos y mayor ansiedad. El límite recomendado es de 400mg diarios; la mayoría de las personas lo exceden sin saberlo.",
+    warning: "Cada miligramo extra te acerca más a la dependencia.",
   },
   {
-    title: "Take Back Control",
-    subtitle: "Professional tracking changes everything",
+    title: "Recupera el Control",
+    subtitle: "El seguimiento profesional lo cambia todo",
     content:
-      "Studies show people who track their caffeine intake reduce consumption by 40% within the first month. Knowledge is power—and freedom.",
+      "Los estudios muestran que las personas que rastrean su consumo de cafeína reducen el consumo en un 40% en el primer mes. El conocimiento es poder y libertad.",
     warning:
-      "The question isn't whether you need help. It's whether you're ready to help yourself.",
+      "La pregunta no es si necesitas ayuda. Es si estás listo para ayudarte a ti mismo.",
   },
   {
-    title: "Your Future Self",
-    subtitle: "Imagine waking up energized—naturally",
+    title: "Tu Yo Futuro",
+    subtitle: "Imagina despertarte con energía, de forma natural",
     content:
-      "Better sleep. Stable energy. No afternoon crashes. No dependency. This isn't just possible—it's inevitable with the right system.",
+      "Mejor sueño. Energía estable. Sin caídas vespertinas. Sin dependencia. Esto no es solo posible, es inevitable con el sistema adecuado.",
     warning:
-      "The price of change is always less than the cost of staying the same.",
+      "El precio del cambio siempre es menor que el costo de permanecer igual.",
   },
 ];
 
@@ -237,11 +128,11 @@ export default function OnboardingScreen() {
           {currentIndex === 1 && (
             <View style={[styles.statsBox, { backgroundColor: Colors.white }]}>
               <Text style={[styles.statsTitle, { color: Colors.black }]}>
-                Daily Caffeine Facts
+                Datos Diarios de Cafeína
               </Text>
               <View style={styles.statsRow}>
                 <Text style={[styles.statsLabel, { color: Colors.gray700 }]}>
-                  Safe Daily Limit:
+                  Límite Diario Seguro:
                 </Text>
                 <Text style={[styles.statsValue, { color: Colors.black }]}>
                   400mg
@@ -249,7 +140,7 @@ export default function OnboardingScreen() {
               </View>
               <View style={styles.statsRow}>
                 <Text style={[styles.statsLabel, { color: Colors.gray700 }]}>
-                  Average Consumption:
+                  Consumo Promedio:
                 </Text>
                 <Text style={[styles.statsValue, { color: Colors.error }]}>
                   540mg
@@ -257,10 +148,10 @@ export default function OnboardingScreen() {
               </View>
               <View style={styles.statsRow}>
                 <Text style={[styles.statsLabel, { color: Colors.gray700 }]}>
-                  Withdrawal Timeline:
+                  Cronograma de Abstinencia:
                 </Text>
                 <Text style={[styles.statsValue, { color: Colors.black }]}>
-                  12-24 hours
+                  12-24 horas
                 </Text>
               </View>
             </View>
@@ -268,27 +159,123 @@ export default function OnboardingScreen() {
         </ScrollView>
 
         {/* Action Button */}
-        <TouchableOpacity
-          onPress={handleNext}
-          style={[styles.button, isLastSlide && styles.lastButton]}
-        >
-          <Text style={[styles.buttonText, { color: Colors.black }]}>
-            {isLastSlide ? "Start Taking Control" : "Continue"}
-          </Text>
-        </TouchableOpacity>
+        <Button variant="primary" onPress={handleNext}>
+          {isLastSlide ? "Comenzar a Tomar Control" : "Continuar"}
+        </Button>
 
         {/* Skip Option (only on first slides) */}
         {!isLastSlide && (
-          <TouchableOpacity
+          <Button
+            variant="ghost"
             onPress={finishOnboarding}
             style={styles.skipButton}
           >
-            <Text style={[styles.skipText, { color: AppTheme.text.disabled }]}>
-              Skip Introduction
-            </Text>
-          </TouchableOpacity>
+            Omitir Introducción
+          </Button>
         )}
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xl,
+  },
+  progressContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+  },
+  progressBar: {
+    height: 2,
+    borderRadius: 1,
+    marginHorizontal: Spacing.xs,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  titleContainer: {
+    alignItems: "center",
+    marginBottom: Spacing["3xl"],
+  },
+  title: {
+    fontSize: Typography.size["3xl"],
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  subtitle: {
+    fontSize: Typography.size.lg,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  textContainer: {
+    marginBottom: Spacing.xl,
+  },
+  contentText: {
+    fontSize: Typography.size.base,
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  warningBox: {
+    padding: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  warningText: {
+    fontSize: Typography.size.sm,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
+  statsBox: {
+    padding: Spacing.lg,
+    borderRadius: 8,
+    marginBottom: Spacing.xl,
+  },
+  statsTitle: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
+    marginBottom: Spacing.md,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: Spacing.sm,
+  },
+  statsLabel: {
+    fontSize: Typography.size.base,
+  },
+  statsValue: {
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.semibold,
+  },
+  button: {
+    backgroundColor: Colors.white,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    marginHorizontal: Spacing.md,
+  },
+  lastButton: {
+    marginBottom: Spacing.lg,
+  },
+  buttonText: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
+  },
+  skipButton: {
+    marginTop: Spacing.md,
+  },
+  skipText: {
+    textAlign: "center",
+    fontSize: Typography.size.sm,
+  },
+});

@@ -2,10 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, Typography } from "../constants";
+import { AppTheme, Spacing, Typography } from "../constants";
 import Button from "./Button";
 import FeatureList from "./FeatureList";
-import TestimonialList from "./TestimonialList";
 
 interface LandingStepProps {
   onStartJourney: () => void;
@@ -20,17 +19,6 @@ const features = [
   "Información sobre salud",
   "Cronograma de abstinencia",
   "Recomendaciones de expertos",
-];
-
-const testimonials = [
-  {
-    text: "No tenía idea de que consumía 600mg de cafeína al día. Esta app literalmente salvó mi sueño.",
-    author: "Sarah M.",
-  },
-  {
-    text: "Finalmente rompí mi adicción de 10 años a las bebidas energéticas. El seguimiento me hizo responsable.",
-    author: "Mike R.",
-  },
 ];
 
 const LandingStep: React.FC<LandingStepProps> = ({
@@ -66,12 +54,6 @@ const LandingStep: React.FC<LandingStepProps> = ({
           <FeatureList features={features} />
         </View>
 
-        {/* Social Proof */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resultados Reales</Text>
-          <TestimonialList testimonials={testimonials} />
-        </View>
-
         {/* Pricing */}
         <View style={styles.pricingBox}>
           <View style={styles.pricingCard}>
@@ -95,23 +77,23 @@ const LandingStep: React.FC<LandingStepProps> = ({
             Ya Tengo una Cuenta
           </Button>
 
+          {__DEV__ && (
+            <Button
+              variant="error"
+              onPress={async () => {
+                await AsyncStorage.removeItem("hasSeenOnboarding");
+                // TODO: Replace with toast
+                alert("Debug: Onboarding reset! Restart the app.");
+              }}
+            >
+              DEBUG: reset onboarding
+            </Button>
+          )}
+
           <Text style={styles.footerText}>
             Cancela en cualquier momento. Tu salud lo vale.
           </Text>
         </View>
-
-        {__DEV__ && (
-          <Button
-            variant="error"
-            onPress={async () => {
-              await AsyncStorage.removeItem("hasSeenOnboarding");
-              // TODO: Replace with toast
-              alert("Debug: Onboarding reset! Restart the app.");
-            }}
-          >
-            DEPURACIÓN: Restablecer Incorporación
-          </Button>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -120,7 +102,7 @@ const LandingStep: React.FC<LandingStepProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: AppTheme.background,
   },
   scrollView: {
     flex: 1,
@@ -131,33 +113,33 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   title: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size["4xl"],
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
   subtitle: {
-    color: Colors.gray300,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.xl,
     textAlign: "center",
   },
   urgencyBox: {
-    backgroundColor: Colors.white,
+    backgroundColor: AppTheme.surface,
     marginHorizontal: Spacing.lg,
     padding: Spacing.lg,
     borderRadius: 8,
     marginBottom: Spacing.xl,
   },
   urgencyTitle: {
-    color: Colors.black,
+    color: AppTheme.text.inverse,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.md,
   },
   urgencyText: {
-    color: Colors.gray700,
+    color: AppTheme.text.secondary,
     textAlign: "center",
     fontSize: Typography.size.base,
   },
@@ -166,7 +148,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size["2xl"],
     fontWeight: Typography.weight.bold,
     textAlign: "center",
@@ -177,33 +159,34 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   pricingCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.lg,
     borderRadius: 8,
   },
   pricingAmount: {
-    color: Colors.black,
+    color: AppTheme.text.inverse,
     fontSize: Typography.size["2xl"],
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.xs,
   },
   pricingDescription: {
-    color: Colors.gray600,
+    color: AppTheme.text.secondary,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
   pricingNote: {
-    color: Colors.gray700,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.sm,
     textAlign: "center",
   },
   ctaSection: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xl,
+    gap: Spacing.sm,
   },
   footerText: {
-    color: Colors.gray500,
+    color: AppTheme.text.disabled,
     fontSize: Typography.size.xs,
     textAlign: "center",
     marginTop: Spacing.lg,

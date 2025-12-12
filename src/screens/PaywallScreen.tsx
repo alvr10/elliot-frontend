@@ -3,11 +3,9 @@ import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AuthStep from "../components/AuthStep";
 import LandingStep from "../components/LandingStep";
-import SubscriptionStep from "../components/SubscriptionStep";
 import { Colors, Spacing, Typography } from "../constants";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import { useSubscription } from "../context/SubscriptionContext";
 
 type FlowStep = "landing" | "auth" | "subscription";
 type AuthMode = "signin" | "signup";
@@ -31,12 +29,9 @@ export default function PaywallScreen() {
     signInWithEmail,
     signUpWithEmail,
     user,
-    subscription,
     refreshSubscription,
     subscriptionLoading,
   } = useAuth();
-  const { createSubscription, loading: subscriptionCreationLoading } =
-    useSubscription();
   const { showNotification } = useNotification();
 
   const [currentStep, setCurrentStep] = useState<FlowStep>("landing");
@@ -49,29 +44,19 @@ export default function PaywallScreen() {
       return;
     }
 
-    if (user && subscription?.status === "active") {
-      console.log("User has active subscription, should redirect to app");
-      // User is signed in and subscribed - App.tsx will handle redirect
+    if (user) {
+      console.log("User authenticated, free access in beta");
+      // User is signed in - free access in beta, App.tsx will handle redirect
       return;
     }
 
-    if (
-      user &&
-      subscription?.status !== "active" &&
-      subscription?.status !== "active_until_period_end"
-    ) {
-      console.log(
-        "User signed in but no active subscription, going to subscription step"
-      );
-      // User signed in but not subscribed - go to subscription step
-      setCurrentStep("subscription");
-    } else if (!user && currentStep === "subscription") {
-      console.log("User signed out, going back to auth");
-      // User signed out - go back to auth
-      setCurrentStep("auth");
+    if (!user && currentStep !== "landing") {
+      console.log("User signed out, going back to landing");
+      // User signed out - go back to landing
+      setCurrentStep("landing");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, subscription, subscriptionLoading]);
+  }, [user, subscriptionLoading]);
 
   const handleStartJourney = () => {
     setCurrentStep("auth");
@@ -117,22 +102,8 @@ export default function PaywallScreen() {
         }, 1000);
       }
     } catch (error: any) {
+      console.log("Auth error:", error);
       showNotification(error.message, "error");
-    }
-  };
-
-  const handleSubscribe = async () => {
-    try {
-      const success = await createSubscription();
-      if (success) {
-        await refreshSubscription();
-        // App.tsx will handle navigation to main app
-      }
-    } catch {
-      showNotification(
-        "No se pudo procesar la suscripción. Por favor intenta de nuevo.",
-        "error"
-      );
     }
   };
 
@@ -170,14 +141,6 @@ export default function PaywallScreen() {
           onAuth={handleAuth}
           onGoogleAuth={handleGoogleAuth}
           loading={false} // AuthStep manages its own loading state
-        />
-      );
-    case "subscription":
-      return (
-        <SubscriptionStep
-          userEmail={user?.email}
-          onSubscribe={handleSubscribe}
-          loading={subscriptionCreationLoading}
         />
       );
     default:

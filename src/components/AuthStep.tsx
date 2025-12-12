@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -10,7 +11,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Colors, Spacing, Typography } from "../constants";
+import { AppTheme, Spacing, Typography } from "../constants";
+import { apiClient } from "../services/api";
 import Button from "./Button";
 import ProgressBar from "./ProgressBar";
 
@@ -35,6 +37,18 @@ const AuthStep: React.FC<AuthStepProps> = ({
 
   const handleAuth = async () => {
     await onAuth(email, password, authMode);
+  };
+
+  const handleDebugHealth = async () => {
+    try {
+      const response = await apiClient.get("/v1/health");
+      Alert.alert(
+        "Health Check",
+        `Status: ${response.status}\nResponse: ${JSON.stringify(response.data)}`
+      );
+    } catch (error: any) {
+      Alert.alert("Health Check Failed", error.message || "Unknown error");
+    }
   };
 
   return (
@@ -113,6 +127,10 @@ const AuthStep: React.FC<AuthStepProps> = ({
                 {authMode === "signup" ? "Crear Cuenta" : "Iniciar Sesión"}
               </Button>
 
+              <Button variant="outline" onPress={handleDebugHealth}>
+                Debug Health Check
+              </Button>
+
               <TouchableOpacity
                 onPress={() =>
                   setAuthMode(authMode === "signup" ? "signin" : "signup")
@@ -138,7 +156,7 @@ const AuthStep: React.FC<AuthStepProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: AppTheme.background,
   },
   keyboardAvoiding: {
     flex: 1,
@@ -158,53 +176,53 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   authTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size["3xl"],
     fontWeight: Typography.weight.bold,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
   authSubtitle: {
-    color: Colors.gray300,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.lg,
     textAlign: "center",
   },
   authForm: {
-    backgroundColor: Colors.gray900,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.lg,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.gray700,
+    borderColor: AppTheme.border,
     marginBottom: Spacing["2xl"],
   },
   textInput: {
-    backgroundColor: Colors.gray800,
-    color: Colors.white,
+    backgroundColor: AppTheme.backgroundSecondary,
+    color: AppTheme.text.primary,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderRadius: 8,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.gray600,
+    borderColor: AppTheme.border,
     fontSize: Typography.size.lg,
   },
   passwordInput: {
-    backgroundColor: Colors.gray800,
-    color: Colors.white,
+    backgroundColor: AppTheme.backgroundSecondary,
+    color: AppTheme.text.primary,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderRadius: 8,
     marginBottom: Spacing["2xl"],
     borderWidth: 1,
-    borderColor: Colors.gray600,
+    borderColor: AppTheme.border,
     fontSize: Typography.size.lg,
   },
   switchAuthText: {
-    color: Colors.gray400,
+    color: AppTheme.text.secondary,
     textAlign: "center",
   },
   switchAuthLink: {
-    color: Colors.white,
+    color: AppTheme.primary,
     fontWeight: Typography.weight.medium,
   },
 });

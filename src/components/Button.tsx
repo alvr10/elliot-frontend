@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Text,
   TextStyle,
   TouchableOpacity,
   ViewStyle,
 } from "react-native";
-import { Spacing, Typography } from "../constants";
-import { AppTheme } from "../constants/theme";
+import { AppTheme, Colors, Spacing, Typography } from "../constants";
 
 type ButtonVariant =
   | "primary"
@@ -38,11 +38,28 @@ const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const handlePressIn = () => {
+    Animated.timing(translateY, {
+      toValue: -4,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
+  };
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       paddingVertical: Spacing.lg,
       paddingHorizontal: Spacing.lg,
-      borderRadius: 8,
+      borderRadius: 16,
       alignItems: "center",
       justifyContent: "center",
       opacity: disabled || loading ? 0.6 : 1,
@@ -73,7 +90,7 @@ const Button: React.FC<ButtonProps> = ({
         return {
           ...baseStyle,
           backgroundColor: "transparent",
-          borderWidth: 1,
+          borderWidth: 2,
           borderColor: AppTheme.primary,
         };
       case "ghost":
@@ -95,6 +112,7 @@ const Button: React.FC<ButtonProps> = ({
 
     switch (variant) {
       case "primary":
+        return { ...baseTextStyle, color: Colors.textWhite };
       case "secondary":
       case "success":
       case "error":
@@ -120,25 +138,29 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      style={[getButtonStyle(), style]}
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.8}
-    >
-      {loading ? (
-        loadingText ? (
-          <Text style={[getTextStyle(), textStyle]}>{loadingText}</Text>
+    <Animated.View style={{ transform: [{ translateY }] }}>
+      <TouchableOpacity
+        style={[getButtonStyle(), style]}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled || loading}
+        activeOpacity={0.8}
+      >
+        {loading ? (
+          loadingText ? (
+            <Text style={[getTextStyle(), textStyle]}>{loadingText}</Text>
+          ) : (
+            <ActivityIndicator
+              size="small"
+              color={getTextStyle().color as string}
+            />
+          )
         ) : (
-          <ActivityIndicator
-            size="small"
-            color={getTextStyle().color as string}
-          />
-        )
-      ) : (
-        <Text style={[getTextStyle(), textStyle]}>{children}</Text>
-      )}
-    </TouchableOpacity>
+          <Text style={[getTextStyle(), textStyle]}>{children}</Text>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 

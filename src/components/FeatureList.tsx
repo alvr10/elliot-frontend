@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Colors, Spacing, Typography } from "../constants";
+import { AppTheme, Spacing, Typography } from "../constants";
 
 interface FeatureListProps {
   features: string[];
@@ -26,14 +26,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   featureDot: {
-    backgroundColor: Colors.white,
+    backgroundColor: AppTheme.primary,
     width: 8,
     height: 8,
     borderRadius: 4,
     marginRight: Spacing.lg,
   },
   featureText: {
-    color: Colors.gray300,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.base,
     flex: 1,
   },

@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Colors, Spacing, Typography } from "../constants";
+import { AppTheme, Spacing, Typography } from "../constants";
 
 interface ProgressBarProps {
   currentStep: number;
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   backText: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.lg,
   },
   progressBarContainer: {
@@ -71,13 +71,13 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   progressBarActive: {
-    backgroundColor: Colors.white,
+    backgroundColor: AppTheme.primary,
   },
   progressBarInactive: {
-    backgroundColor: Colors.gray700,
+    backgroundColor: AppTheme.border,
   },
   progressText: {
-    color: Colors.gray400,
+    color: AppTheme.text.secondary,
     textAlign: "center",
     fontSize: Typography.size.sm,
   },

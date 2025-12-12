@@ -1,3 +1,5 @@
+import { apiClient } from "@/services/api";
+import { STORAGE_KEYS } from "@/services/api/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -73,6 +75,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
 
       if (event === "SIGNED_IN" && session?.user) {
+        // Store the access token for API requests
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.ACCESS_TOKEN,
+          session.access_token
+        );
+        if (session.refresh_token) {
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.REFRESH_TOKEN,
+            session.refresh_token
+          );
+        }
+
         setUser({
           id: session.user.id,
           email: session.user.email!,
@@ -80,6 +94,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Fetch subscription status for signed in user
         await fetchSubscriptionStatus(session.access_token);
       } else if (event === "SIGNED_OUT") {
+        // Clear stored tokens
+        await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
         setUser(null);
         setSubscription(null);
         setLoading(false);
@@ -141,28 +158,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setSubscriptionLoading(true); // NEW: Set subscription loading
     try {
       console.log("Fetching subscription status...");
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/subscription/status`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiClient.get("/subscription/status");
 
       console.log("Subscription status response:", response.status);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Subscription data:", data);
-
-        // Set subscription data regardless of status
-        setSubscription(data);
-      } else {
-        const errorText = await response.text();
-        console.error("Subscription status error:", errorText);
-        setSubscription({ status: "inactive" });
-      }
+      // Set subscription data regardless of status
+      setSubscription(response.data);
     } catch (error) {
       console.error("Failed to fetch subscription status:", error);
       setSubscription({ status: "inactive" });
