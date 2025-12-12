@@ -3,13 +3,118 @@ import React, { useState } from "react";
 import {
   Dimensions,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppTheme, Colors, Spacing, Typography } from "../constants";
 
 const { width } = Dimensions.get("window");
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xl,
+  },
+  progressContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+  },
+  progressBar: {
+    height: 2,
+    borderRadius: 1,
+    marginHorizontal: Spacing.xs,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  titleContainer: {
+    alignItems: "center",
+    marginBottom: Spacing["3xl"],
+  },
+  title: {
+    fontSize: Typography.size["3xl"],
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  subtitle: {
+    fontSize: Typography.size.lg,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  textContainer: {
+    marginBottom: Spacing.xl,
+  },
+  contentText: {
+    fontSize: Typography.size.base,
+    lineHeight: Typography.lineHeight.normal,
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  warningBox: {
+    padding: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  warningText: {
+    fontSize: Typography.size.sm,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
+  statsBox: {
+    padding: Spacing.lg,
+    borderRadius: 8,
+    marginBottom: Spacing.xl,
+  },
+  statsTitle: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
+    marginBottom: Spacing.md,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: Spacing.sm,
+  },
+  statsLabel: {
+    fontSize: Typography.size.base,
+  },
+  statsValue: {
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.semibold,
+  },
+  button: {
+    backgroundColor: Colors.white,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    marginHorizontal: Spacing.md,
+  },
+  lastButton: {
+    marginBottom: Spacing.lg,
+  },
+  buttonText: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
+  },
+  skipButton: {
+    marginTop: Spacing.md,
+  },
+  skipText: {
+    textAlign: "center",
+    fontSize: Typography.size.sm,
+  },
+});
 
 const onboardingData = [
   {
@@ -69,39 +174,60 @@ export default function OnboardingScreen() {
   const isLastSlide = currentIndex === onboardingData.length - 1;
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
-      <View className="flex-1 justify-between px-6 py-8">
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: AppTheme.background }]}
+    >
+      <View style={styles.content}>
         {/* Progress Indicators */}
-        <View className="flex-row justify-center space-x-2 mb-8">
+        <View style={styles.progressContainer}>
           {onboardingData.map((_, index) => (
             <View
               key={index}
-              className={`h-2 rounded-full ${
-                index <= currentIndex ? "bg-white" : "bg-gray-700"
-              }`}
-              style={{ width: width / onboardingData.length - 16 }}
+              style={[
+                styles.progressBar,
+                {
+                  width: width / onboardingData.length - 16,
+                  backgroundColor:
+                    index <= currentIndex ? Colors.white : Colors.gray700,
+                },
+              ]}
             />
           ))}
         </View>
 
         {/* Content */}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          <View className="items-center mb-12">
-            <Text className="text-white text-3xl font-bold text-center mb-4">
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: AppTheme.text.primary }]}>
               {currentData.title}
             </Text>
-            <Text className="text-gray-300 text-lg text-center mb-8">
+            <Text style={[styles.subtitle, { color: AppTheme.text.secondary }]}>
               {currentData.subtitle}
             </Text>
           </View>
 
-          <View className="mb-8">
-            <Text className="text-white text-base leading-6 text-center mb-6">
+          <View style={styles.textContainer}>
+            <Text
+              style={[styles.contentText, { color: AppTheme.text.primary }]}
+            >
               {currentData.content}
             </Text>
 
-            <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-              <Text className="text-gray-300 text-sm italic text-center">
+            <View
+              style={[
+                styles.warningBox,
+                {
+                  backgroundColor: AppTheme.surface,
+                  borderColor: AppTheme.border,
+                },
+              ]}
+            >
+              <Text
+                style={[styles.warningText, { color: AppTheme.text.secondary }]}
+              >
                 {currentData.warning}
               </Text>
             </View>
@@ -109,23 +235,33 @@ export default function OnboardingScreen() {
 
           {/* Statistics Box */}
           {currentIndex === 1 && (
-            <View className="bg-white p-6 rounded-lg mb-8">
-              <Text className="text-black text-lg font-bold text-center mb-4">
+            <View style={[styles.statsBox, { backgroundColor: Colors.white }]}>
+              <Text style={[styles.statsTitle, { color: Colors.black }]}>
                 Daily Caffeine Facts
               </Text>
-              <View className="space-y-3">
-                <View className="flex-row justify-between">
-                  <Text className="text-gray-700">Safe Daily Limit:</Text>
-                  <Text className="text-black font-semibold">400mg</Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-gray-700">Average Consumption:</Text>
-                  <Text className="text-red-600 font-semibold">540mg</Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-gray-700">Withdrawal Timeline:</Text>
-                  <Text className="text-black font-semibold">12-24 hours</Text>
-                </View>
+              <View style={styles.statsRow}>
+                <Text style={[styles.statsLabel, { color: Colors.gray700 }]}>
+                  Safe Daily Limit:
+                </Text>
+                <Text style={[styles.statsValue, { color: Colors.black }]}>
+                  400mg
+                </Text>
+              </View>
+              <View style={styles.statsRow}>
+                <Text style={[styles.statsLabel, { color: Colors.gray700 }]}>
+                  Average Consumption:
+                </Text>
+                <Text style={[styles.statsValue, { color: Colors.error }]}>
+                  540mg
+                </Text>
+              </View>
+              <View style={styles.statsRow}>
+                <Text style={[styles.statsLabel, { color: Colors.gray700 }]}>
+                  Withdrawal Timeline:
+                </Text>
+                <Text style={[styles.statsValue, { color: Colors.black }]}>
+                  12-24 hours
+                </Text>
               </View>
             </View>
           )}
@@ -134,19 +270,22 @@ export default function OnboardingScreen() {
         {/* Action Button */}
         <TouchableOpacity
           onPress={handleNext}
-          className={`bg-white py-4 rounded-lg mx-4 ${
-            isLastSlide ? "mb-6" : "mb-0"
-          }`}
+          style={[styles.button, isLastSlide && styles.lastButton]}
         >
-          <Text className="text-black text-lg font-bold text-center">
+          <Text style={[styles.buttonText, { color: Colors.black }]}>
             {isLastSlide ? "Start Taking Control" : "Continue"}
           </Text>
         </TouchableOpacity>
 
         {/* Skip Option (only on first slides) */}
         {!isLastSlide && (
-          <TouchableOpacity onPress={finishOnboarding} className="mt-4">
-            <Text className="text-gray-500 text-center">Skip Introduction</Text>
+          <TouchableOpacity
+            onPress={finishOnboarding}
+            style={styles.skipButton}
+          >
+            <Text style={[styles.skipText, { color: AppTheme.text.disabled }]}>
+              Skip Introduction
+            </Text>
           </TouchableOpacity>
         )}
       </View>

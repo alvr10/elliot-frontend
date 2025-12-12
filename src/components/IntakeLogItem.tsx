@@ -1,6 +1,7 @@
+import { AppTheme, Colors, Spacing, Typography } from "@/constants";
 import * as Haptics from "expo-haptics";
 import React from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
 
@@ -32,7 +33,7 @@ export default function IntakeLogItem({ log, onUpdate }: IntakeLogItemProps) {
         minute: "2-digit",
         hour12: true,
       });
-    } catch (e) {
+    } catch {
       return "Invalid time";
     }
   };
@@ -91,34 +92,87 @@ export default function IntakeLogItem({ log, onUpdate }: IntakeLogItemProps) {
   const safeCaffeine = Number(log.total_caffeine) || 0;
 
   return (
-    <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-      <View className="flex-row justify-between items-start">
-        <View className="flex-1">
-          <Text className="text-white font-semibold text-base">
+    <View style={styles.container}>
+      <View style={styles.row}>
+        <View style={styles.left}>
+          <Text style={styles.drinkName}>
             {log.drinks?.name || "Unknown drink"}
           </Text>
           {log.drinks?.brand && (
-            <Text className="text-gray-400 text-sm">{log.drinks.brand}</Text>
+            <Text style={styles.brand}>{log.drinks.brand}</Text>
           )}
-          <View className="flex-row mt-2 space-x-4">
-            <Text className="text-gray-300 text-sm">
+          <View style={styles.details}>
+            <Text style={styles.servings}>
               {safeServings}x serving{safeServings !== 1 ? "s" : ""}
             </Text>
-            <Text className="text-white text-sm font-medium">
-              {safeCaffeine}mg
-            </Text>
+            <Text style={styles.caffeine}>{safeCaffeine}mg</Text>
           </View>
         </View>
 
-        <View className="items-end">
-          <Text className="text-gray-400 text-sm">
-            {formatTime(log.consumed_at)}
-          </Text>
-          <TouchableOpacity onPress={handleDelete} className="mt-2 px-2 py-1">
-            <Text className="text-red-400 text-xs">Delete</Text>
+        <View style={styles.right}>
+          <Text style={styles.time}>{formatTime(log.consumed_at)}</Text>
+          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+            <Text style={styles.deleteText}>Delete</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: AppTheme.surface,
+    padding: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: AppTheme.border,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  left: {
+    flex: 1,
+  },
+  drinkName: {
+    color: AppTheme.text.primary,
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.semibold,
+  },
+  brand: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.sm,
+  },
+  details: {
+    flexDirection: "row",
+    marginTop: Spacing.xs,
+  },
+  servings: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.sm,
+    marginRight: Spacing.lg,
+  },
+  caffeine: {
+    color: AppTheme.text.primary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+  },
+  right: {
+    alignItems: "flex-end",
+  },
+  time: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.sm,
+  },
+  deleteButton: {
+    marginTop: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  deleteText: {
+    color: Colors.error,
+    fontSize: Typography.size.xs,
+  },
+});

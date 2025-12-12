@@ -26,10 +26,14 @@ export default function CircularProgress({
 
   return (
     <View
-      style={{ width: size, height: size }}
-      className="justify-center items-center"
+      style={{
+        width: size,
+        height: size,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
     >
-      <Svg width={size} height={size} className="absolute">
+      <Svg width={size} height={size} style={{ position: "absolute" }}>
         {/* Background Circle */}
         <Circle
           cx={size / 2}

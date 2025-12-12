@@ -6,22 +6,22 @@
 import { Colors } from './colors';
 
 export const Theme = {
-  dark: {
+  light: {
     // Background colors
-    background: '#121212',
-    backgroundSecondary: '#1E1E1E',
-    backgroundTertiary: '#2C2C2C',
+    background: Colors.background,
+    backgroundSecondary: Colors.backgroundGray,
+    backgroundTertiary: Colors.gray200,
 
     // Surface colors
-    surface: '#1E1E1E',
-    surfaceVariant: '#2C2C2C',
+    surface: Colors.white,
+    surfaceVariant: Colors.gray100,
 
     // Text colors
     text: {
-      primary: '#e2e2e2ff',
-      secondary: '#B3B3B3',
-      disabled: '#666666',
-      inverse: '#121212',
+      primary: Colors.textPrimary,
+      secondary: Colors.textSecondary,
+      disabled: Colors.textDisabled,
+      inverse: Colors.black,
     },
 
     // Brand colors (keep bright for dark mode)
@@ -40,17 +40,17 @@ export const Theme = {
     info: Colors.info,
 
     // Borders
-    border: '#2C2C2C',
+    border: Colors.border,
     borderFocused: Colors.primary,
 
     // Overlays
-    overlay: 'rgba(0, 0, 0, 0.7)',
-    overlayLight: 'rgba(0, 0, 0, 0.5)',
+    overlay: 'rgba(0, 0, 0, 0.1)',
+    overlayLight: 'rgba(0, 0, 0, 0.05)',
 
     // Status bar
-    statusBar: 'light' as const,
+    statusBar: 'dark' as const,
   },
 } as const;
 
-// Export only dark theme since we're dark mode only
-export const AppTheme = Theme.dark;
+// Export only light theme since we're light mode only
+export const AppTheme = Theme.light;

@@ -1,10 +1,9 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { createClient } from "@supabase/supabase-js";
-import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -12,13 +11,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import CircularProgress from "../components/CircularProgress";
 import IntakeLogItem from "../components/IntakeLogItem";
+import { AppTheme, Colors, Spacing, Typography } from "../constants";
 import { useAuth } from "../context/AuthContext";
-import { useNotification } from "../context/NotificationContext";
-
-const supabase = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { authApi, caffeineApi } from "../services/api";
 
 interface IntakeLog {
   id: number;
@@ -44,8 +39,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
-  const { user, getCurrentToken } = useAuth();
-  const { showNotification } = useNotification();
+  const { user } = useAuth();
 
   // Fetch data when screen comes into focus (after adding intake)
   useFocusEffect(
@@ -54,31 +48,18 @@ export default function HomeScreen() {
         fetchDailyIntake();
         fetchUserProfile(); // FETCH USER'S DAILY LIMIT
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user])
   );
 
   // NEW FUNCTION: Fetch user's daily limit
   const fetchUserProfile = async () => {
     try {
-      const token = await getCurrentToken();
-      if (!token) return;
-
       console.log("Fetching user profile for daily limit...");
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/user/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const userLimit = data.daily_caffeine_limit || 400;
-        console.log("User's daily limit:", userLimit);
-        setDailyLimit(userLimit);
-      } else {
-        console.error("Failed to fetch user profile:", response.status);
-      }
+      const profile = await authApi.getProfile();
+      const userLimit = profile.dailyLimit || 400;
+      console.log("User's daily limit:", userLimit);
+      setDailyLimit(userLimit);
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
     }
@@ -90,80 +71,16 @@ export default function HomeScreen() {
 
       console.log("Fetching daily intake...");
       const today = new Date().toISOString().split("T")[0];
-      const token = await getCurrentToken();
 
-      if (!token) {
-        console.error("No token available");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/intake/daily/${today}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("Daily intake response status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Daily intake error:", errorText);
-        return;
-      }
-
-      const data = await response.json();
+      const logs = await caffeineApi.getIntakeHistory("daily", today);
+      const total_caffeine = logs.reduce((sum, log) => sum + log.caffeineMg, 0);
+      const data = { date: today, total_caffeine, logs };
       console.log("Daily intake data:", data);
-      setDailyIntake(data);
+      setDailyIntake(data as any);
     } catch (error) {
       console.error("Failed to fetch daily intake:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
-  };
-
-  const quickDrinks = [
-    { name: "Drip Coffee", caffeine: 95, id: 5 },
-    { name: "Espresso", caffeine: 64, id: 1 },
-    { name: "Green Tea", caffeine: 25, id: 18 },
-  ];
-
-  const quickAddIntake = async (drinkName: string, caffeine: number) => {
-    try {
-      const token = await getCurrentToken();
-      if (!token) return;
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/intake`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            drink_id: quickDrinks.find(d => d.name === drinkName)?.id,
-            servings: 1,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        fetchDailyIntake();
-        showNotification(`Added ${drinkName} (${caffeine}mg)`, "success");
-      }
-    } catch (error) {
-      showNotification("Failed to add intake", "error");
     }
   };
 
@@ -178,161 +95,126 @@ export default function HomeScreen() {
   const caffeinePercentage = dailyIntake
     ? (dailyIntake.total_caffeine / dailyLimit) * 100
     : 0;
-  const isOverLimit = caffeinePercentage > 100;
+
+  // Generate 7 days starting from today
+  const days = [];
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const dayName = date.toLocaleDateString("es-ES", { weekday: "short" });
+    const formattedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    const dayNum = date.getDate();
+    days.push({ dayName: formattedDayName, dayNum });
+  }
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-black justify-center items-center">
-        <Text className="text-white">Loading...</Text>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: AppTheme.background }]}
+      >
+        <Text style={[styles.loadingText, { color: AppTheme.text.primary }]}>
+          Loading...
+        </Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: AppTheme.background }]}
+    >
       <ScrollView
-        className="flex-1"
+        style={styles.scrollView}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#fff"
+            tintColor={AppTheme.text.primary}
           />
         }
       >
-        {/* Header with Settings */}
-        <View className="flex-row justify-between items-center px-6 pt-4 pb-6">
-          <View>
-            <Text className="text-white text-2xl font-bold">
-              {getGreeting()}
-            </Text>
-            <Text className="text-gray-400 text-base">Today's Intake</Text>
-            <Text className="text-gray-500 text-sm">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "short",
-                day: "numeric",
-              })}
-            </Text>
-          </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.greeting, { color: AppTheme.text.primary }]}>
+            Hola, {user?.email ? user.email.split("@")[0] : "Usuario"}
+          </Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate("Settings" as never)}
-            className="p-2"
+            onPress={() => (navigation as any).navigate("Settings")}
+            style={styles.profileButton}
           >
-            <Text className="text-white text-2xl">⚙️</Text>
+            <Text style={styles.profileIcon}>👤</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Debug Info */}
-        {__DEV__ && (
-          <View className="mx-6 mb-4 bg-gray-800 p-3 rounded">
-            <Text className="text-yellow-400 text-xs">
-              DEBUG: Total caffeine: {dailyIntake?.total_caffeine || 0}mg, Daily
-              limit: {dailyLimit}mg, Logs: {dailyIntake?.logs?.length || 0}
-            </Text>
-          </View>
-        )}
-
-        {/* Circular Progress */}
-        <View className="items-center mb-8">
-          <CircularProgress
-            size={200}
-            strokeWidth={12}
-            progress={Math.min(caffeinePercentage, 100)}
-            backgroundColor="#1F2937"
-            progressColor={isOverLimit ? "#DC2626" : "#FFFFFF"}
-          >
-            <View className="items-center">
-              <Text className="text-white text-3xl font-bold">
-                {dailyIntake?.total_caffeine || 0}
-              </Text>
-              <Text className="text-gray-400 text-sm">mg caffeine</Text>
-              <Text className="text-gray-400 text-xs mt-1">
-                {dailyLimit - (dailyIntake?.total_caffeine || 0) > 0
-                  ? `${
-                      dailyLimit - (dailyIntake?.total_caffeine || 0)
-                    }mg remaining`
-                  : `${
-                      (dailyIntake?.total_caffeine || 0) - dailyLimit
-                    }mg over limit`}
-              </Text>
-            </View>
-          </CircularProgress>
-        </View>
-
-        {/* Status Message - Updated to use custom limit */}
-        <View className="mx-6 mb-6">
-          <View
-            className={`p-4 rounded-lg border ${
-              isOverLimit
-                ? "bg-red-900 border-red-700"
-                : caffeinePercentage > 75
-                  ? "bg-yellow-900 border-yellow-700"
-                  : "bg-gray-900 border-gray-700"
-            }`}
-          >
-            <Text className="text-white text-center font-medium">
-              {isOverLimit
-                ? `⚠️ Over your ${dailyLimit}mg daily limit - Consider reducing intake`
-                : caffeinePercentage > 75
-                  ? `🟡 Approaching your ${dailyLimit}mg daily limit`
-                  : `✅ Within your ${dailyLimit}mg daily limit`}
-            </Text>
-          </View>
-        </View>
-
-        {/* Add Intake Button */}
-        <View className="px-6 mb-6">
-          <TouchableOpacity
-            onPress={() => navigation.navigate("AddIntake" as never)}
-            className="bg-white py-4 rounded-lg"
-          >
-            <Text className="text-black text-lg font-bold text-center">
-              + Log Caffeine Intake
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Quick Add */}
-        <View className="px-6 mb-6">
-          <Text className="text-gray-400 text-sm mb-3">Quick Add</Text>
-          <View className="flex-row space-x-3">
-            {quickDrinks.map(drink => (
-              <TouchableOpacity
-                key={drink.name}
-                onPress={() => quickAddIntake(drink.name, drink.caffeine)}
-                className="flex-1 bg-gray-800 border border-gray-600 py-3 px-2 rounded-lg"
+        {/* Days Circles */}
+        <View style={styles.daysContainer}>
+          {days.map((day, index) => (
+            <View key={index} style={styles.dayItem}>
+              <Text
+                style={[styles.dayLabel, { color: AppTheme.text.secondary }]}
               >
-                <Text className="text-white text-sm font-medium text-center">
-                  {drink.name}
+                {day.dayName}
+              </Text>
+              <View
+                style={[
+                  styles.dayCircle,
+                  {
+                    backgroundColor: AppTheme.surface,
+                    borderColor: AppTheme.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.dayNumber, { color: AppTheme.text.primary }]}
+                >
+                  {day.dayNum}
                 </Text>
-                <Text className="text-gray-400 text-xs text-center">
-                  {drink.caffeine}mg
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Daily Intake Card */}
+        <View style={[styles.card, { backgroundColor: AppTheme.primary }]}>
+          <View style={styles.cardLeft}>
+            <Text style={[styles.cardTitle, { color: Colors.white }]}>
+              Ingesta diaria
+            </Text>
+            <Text style={styles.energyIcon}>⚡</Text>
+            <Text style={[styles.percentage, { color: Colors.white }]}>
+              {Math.round(caffeinePercentage)}%
+            </Text>
+          </View>
+          <View style={styles.cardRight}>
+            <CircularProgress
+              size={80}
+              strokeWidth={8}
+              progress={Math.min(caffeinePercentage, 100)}
+              backgroundColor={Colors.white}
+              progressColor={Colors.secondary}
+            >
+              <View style={styles.progressCenter}>
+                <Text style={[styles.progressText, { color: Colors.white }]}>
+                  {dailyIntake?.total_caffeine || 0}
                 </Text>
-              </TouchableOpacity>
-            ))}
+                <Text style={[styles.progressSubText, { color: Colors.white }]}>
+                  mg
+                </Text>
+              </View>
+            </CircularProgress>
           </View>
         </View>
 
-        {/* Custom Drinks Management */}
-        <View className="px-6 mb-6">
-          <TouchableOpacity
-            onPress={() => navigation.navigate("ManageCustomDrinks" as never)}
-            className="bg-gray-800 border border-gray-600 py-3 rounded-lg"
-          >
-            <Text className="text-white text-center font-medium">
-              Manage My Custom Drinks
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Today's Logs */}
+        {/* Today's History */}
         {dailyIntake?.logs && dailyIntake.logs.length > 0 && (
-          <View className="px-6 mb-6">
-            <Text className="text-white text-xl font-bold mb-4">
-              Today's History
+          <View style={styles.historyContainer}>
+            <Text
+              style={[styles.historyTitle, { color: AppTheme.text.primary }]}
+            >
+              Historial de hoy
             </Text>
-            <View className="space-y-3">
+            <View style={styles.historyList}>
               {dailyIntake.logs.map(log => (
                 <IntakeLogItem
                   key={log.id}
@@ -343,19 +225,114 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
-
-        {/* Quick Actions */}
-        <View className="px-6 pb-8">
-          <TouchableOpacity
-            onPress={() => navigation.navigate("History" as never)}
-            className="bg-gray-900 py-3 rounded-lg border border-gray-700"
-          >
-            <Text className="text-white text-center font-medium">
-              View Full History
-            </Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  loadingText: {
+    fontSize: Typography.size.lg,
+    textAlign: "center",
+    marginTop: Spacing.xl,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  greeting: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  profileButton: {
+    padding: Spacing.sm,
+  },
+  profileIcon: {
+    fontSize: Typography.size["2xl"],
+  },
+  daysContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+  },
+  dayItem: {
+    alignItems: "center",
+  },
+  dayLabel: {
+    fontSize: Typography.size.sm,
+    marginBottom: Spacing.xs,
+  },
+  dayCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dayNumber: {
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.medium,
+  },
+  card: {
+    flexDirection: "row",
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: 8,
+  },
+  cardLeft: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  cardTitle: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    marginBottom: Spacing.sm,
+  },
+  energyIcon: {
+    fontSize: Typography.size["3xl"],
+    marginBottom: Spacing.sm,
+  },
+  percentage: {
+    fontSize: Typography.size["4xl"],
+    fontWeight: Typography.weight.bold,
+  },
+  cardRight: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  progressCenter: {
+    alignItems: "center",
+  },
+  progressText: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  progressSubText: {
+    fontSize: Typography.size.sm,
+  },
+  historyContainer: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.xl,
+  },
+  historyTitle: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+    marginBottom: Spacing.md,
+  },
+  historyList: {
+    // Add spacing if needed
+  },
+});

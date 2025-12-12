@@ -1,7 +1,7 @@
 controllers:
   auth:
     base_path: "/api/auth"
-    description: "Authentication endpoints for user login and OAuth"
+    description: "Authentication endpoints for user login, registration and OAuth"
     authentication: "None required"
     endpoints:
       - path: "/google"
@@ -31,16 +31,99 @@ controllers:
             schema:
               type: object
               properties:
-                access_token:
-                  type: string
                 user:
                   type: object
                   properties:
                     id: { type: string }
                     email: { type: string }
                     name: { type: string }
+                session:
+                  type: object
+                  description: "Supabase session object"
           400:
             description: "Invalid authorization code"
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+                error: { type: string }
+                statusCode: { type: number }
+      - path: "/register"
+        method: "POST"
+        summary: "Register a new user with email and password"
+        request_body:
+          required: true
+          schema:
+            type: object
+            required: ["email", "password", "name"]
+            properties:
+              email:
+                type: string
+                format: email
+                description: "User's email address"
+              password:
+                type: string
+                minLength: 6
+                description: "User's password"
+              name:
+                type: string
+                description: "User's display name"
+        responses:
+          201:
+            description: "User registered successfully"
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    email: { type: string }
+                    name: { type: string }
+                session:
+                  type: object
+                  description: "Supabase session object"
+          400:
+            description: "Registration failed (email already exists, invalid data)"
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+                error: { type: string }
+                statusCode: { type: number }
+      - path: "/login"
+        method: "POST"
+        summary: "Login with email and password"
+        request_body:
+          required: true
+          schema:
+            type: object
+            required: ["email", "password"]
+            properties:
+              email:
+                type: string
+                format: email
+                description: "User's email address"
+              password:
+                type: string
+                description: "User's password"
+        responses:
+          200:
+            description: "Login successful"
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    email: { type: string }
+                    name: { type: string }
+                session:
+                  type: object
+                  description: "Supabase session object"
+          400:
+            description: "Invalid credentials"
             schema:
               type: object
               properties:
@@ -209,13 +292,13 @@ controllers:
 
   subscription:
     base_path: "/api/subscription"
-    description: "Subscription management endpoints"
+    description: "Subscription management endpoints (RevenueCat integration planned)"
     authentication: "Bearer token required"
-    guard: "AuthGuard"
+    guard: "AuthGuard and SubscriptionGuard"
     endpoints:
       - path: "/"
         method: "POST"
-        summary: "Create a new subscription"
+        summary: "Create a new subscription (beta: free, post-beta: RevenueCat)"
         request_body:
           required: true
           schema:
@@ -227,31 +310,28 @@ controllers:
                 description: "ID of the subscription plan"
         responses:
           201:
-            description: "Subscription created successfully"
+            description: "Subscription activated for beta"
             schema:
               type: object
               properties:
-                id: { type: string }
+                message: { type: string }
+                userId: { type: string }
                 planId: { type: string }
-                status:
-                  { type: string, enum: ["active", "cancelled", "past_due"] }
-                currentPeriodStart: { type: string, format: date-time }
-                currentPeriodEnd: { type: string, format: date-time }
-          400: "Invalid plan ID or payment failed"
+                subscriptionType: { type: string }
+          400: "Invalid plan ID or user not found"
           401: "Unauthorized"
+          403: "Subscription required (when beta ends)"
       - path: "/cancel"
         method: "POST"
-        summary: "Cancel user's subscription"
+        summary: "Cancel user's subscription (not available during beta)"
         responses:
           200:
-            description: "Subscription cancelled successfully"
+            description: "Cancellation response"
             schema:
               type: object
               properties:
-                id: { type: string }
-                status: { type: string }
-                cancelledAt: { type: string, format: date-time }
-          404: "Subscription not found"
+                message: { type: string }
+                userId: { type: string }
           401: "Unauthorized"
       - path: "/status"
         method: "GET"
@@ -262,35 +342,10 @@ controllers:
             schema:
               type: object
               properties:
-                id: { type: string }
-                planId: { type: string }
-                status: { type: string }
-                currentPeriodStart: { type: string, format: date-time }
-                currentPeriodEnd: { type: string, format: date-time }
-                cancelAtPeriodEnd: { type: boolean }
+                userId: { type: string }
+                status: { type: string, enum: ["active", "inactive"] }
+                type: { type: string, enum: ["beta", "monthly", "yearly"] }
+                startDate: { type: string, format: date-time }
+                endDate: { type: string, format: date-time }
           401: "Unauthorized"
-      - path: "/webhook"
-        method: "POST"
-        summary: "Handle Stripe webhook events"
-        description: "Endpoint for Stripe to send webhook events. Requires Stripe signature verification."
-        request_body:
-          description: "Stripe webhook event payload"
-          schema:
-            type: object
-            properties:
-              id: { type: string }
-              object: { type: string }
-              api_version: { type: string }
-              created: { type: number }
-              data: { type: object }
-              livemode: { type: boolean }
-              pending_webhooks: { type: number }
-              request: { type: object }
-              type: { type: string }
-        headers:
-          - name: "stripe-signature"
-            description: "Stripe webhook signature for verification"
-            required: true
-        responses:
-          200: "Webhook processed successfully"
-          400: "Invalid webhook signature or payload"
+          404: "User not found"

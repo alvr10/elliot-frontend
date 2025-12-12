@@ -3,12 +3,12 @@
  * Elliot Frontend Application
  */
 
-import { ErrorCode, ErrorResponse } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import { ErrorCode, ErrorResponse } from '../../types';
 
 // API Base URL - Can be configured via environment variables
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Storage Keys
 export const STORAGE_KEYS = {

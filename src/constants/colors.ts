@@ -1,18 +1,18 @@
 /**
  * Color Constants
- * Deliveroo Brand Colors and Theme
+ * Elliot Brand Colors and Theme
  */
 
 export const Colors = {
   // Primary Brand Colors
-  primary: '#0088ccff', // Elliot Teal
-  primaryDark: '#005885ff',
-  primaryLight: '#32aeecff',
+  primary: '#795757', // Elliot Café
+  primaryDark: '#553D3D',
+  primaryLight: '#9D7171',
 
   // Secondary Colors
-  secondary: '#FF4B3E',
-  secondaryDark: '#E63E32',
-  secondaryLight: '#FF6B60',
+  secondary: '#FFFFFF',
+  secondaryDark: '#F0F0F0',
+  secondaryLight: '#FFFFFF',
 
   // Neutral Colors
   white: '#FFFFFF',
@@ -34,13 +34,13 @@ export const Colors = {
   info: '#2196F3',
 
   // Text Colors
-  textPrimary: '#212121',
-  textSecondary: '#757575',
+  textPrimary: '#380B0B',
+  textSecondary: '#434343',
   textDisabled: '#BDBDBD',
   textWhite: '#FFFFFF',
 
   // Background Colors
-  background: '#FFFFFF',
+  background: '#FFF0D1',
   backgroundGray: '#F5F5F5',
   backgroundDark: '#212121',
 
