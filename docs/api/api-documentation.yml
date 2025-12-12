@@ -1,0 +1,296 @@
+controllers:
+  auth:
+    base_path: "/api/auth"
+    description: "Authentication endpoints for user login and OAuth"
+    authentication: "None required"
+    endpoints:
+      - path: "/google"
+        method: "GET"
+        summary: "Initiate Google OAuth login"
+        responses:
+          200:
+            description: "Redirect URL for Google OAuth"
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: "Google OAuth redirect URL"
+      - path: "/callback"
+        method: "GET"
+        summary: "Handle Google OAuth callback"
+        parameters:
+          - name: "code"
+            in: "query"
+            description: "Authorization code from Google"
+            required: true
+            type: string
+        responses:
+          200:
+            description: "User authentication successful"
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                user:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    email: { type: string }
+                    name: { type: string }
+          400:
+            description: "Invalid authorization code"
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+                error: { type: string }
+                statusCode: { type: number }
+
+  admin:
+    base_path: "/api/admin"
+    description: "Administrative endpoints for system statistics and management"
+    authentication: "Bearer token with admin privileges required"
+    guard: "AdminGuard"
+    endpoints:
+      - path: "/stats"
+        method: "GET"
+        summary: "Get all admin statistics"
+        responses:
+          200:
+            description: "Admin statistics retrieved successfully"
+            schema:
+              type: object
+              properties:
+                totalUsers: { type: number }
+                totalSubscriptions: { type: number }
+                totalRevenue: { type: number }
+                recentSignups: { type: number }
+          401: "Unauthorized - Invalid or missing admin token"
+      - path: "/users"
+        method: "GET"
+        summary: "Get user statistics"
+        responses:
+          200:
+            description: "User statistics retrieved successfully"
+            schema:
+              type: object
+              properties:
+                totalUsers: { type: number }
+                activeUsers: { type: number }
+                newUsersThisMonth: { type: number }
+      - path: "/subscriptions"
+        method: "GET"
+        summary: "Get subscription statistics"
+        responses:
+          200:
+            description: "Subscription statistics retrieved successfully"
+            schema:
+              type: object
+              properties:
+                totalSubscriptions: { type: number }
+                activeSubscriptions: { type: number }
+                cancelledSubscriptions: { type: number }
+      - path: "/revenue"
+        method: "GET"
+        summary: "Get revenue statistics"
+        responses:
+          200:
+            description: "Revenue statistics retrieved successfully"
+            schema:
+              type: object
+              properties:
+                totalRevenue: { type: number }
+                monthlyRevenue: { type: number }
+                averageRevenuePerUser: { type: number }
+      - path: "/signups"
+        method: "GET"
+        summary: "Get recent signups"
+        parameters:
+          - name: "days"
+            in: "query"
+            description: "Number of days to look back"
+            required: false
+            type: integer
+            example: 7
+        responses:
+          200:
+            description: "Recent signups retrieved successfully"
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  email: { type: string }
+                  createdAt: { type: string, format: date-time }
+
+  caffeine:
+    base_path: "/api/caffeine"
+    description: "Caffeine intake tracking endpoints"
+    authentication: "Bearer token required"
+    guard: "AuthGuard"
+    endpoints:
+      - path: "/log-intake"
+        method: "POST"
+        summary: "Log caffeine intake"
+        request_body:
+          required: true
+          schema:
+            type: object
+            required: ["drinkId", "servings"]
+            properties:
+              drinkId:
+                type: string
+                description: "ID of the drink consumed"
+              servings:
+                type: number
+                minimum: 0.1
+                description: "Number of servings consumed"
+              consumedAt:
+                type: string
+                format: date-time
+                description: "Optional timestamp of consumption"
+        responses:
+          201:
+            description: "Intake logged successfully"
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                drinkId: { type: string }
+                servings: { type: number }
+                consumedAt: { type: string, format: date-time }
+          400: "Invalid request data"
+          401: "Unauthorized"
+      - path: "/intake"
+        method: "GET"
+        summary: "Get caffeine intake history"
+        parameters:
+          - name: "period"
+            in: "query"
+            description: "Time period for intake data"
+            required: false
+            type: string
+            enum: ["daily", "weekly", "monthly", "yearly"]
+          - name: "date"
+            in: "query"
+            description: "Specific date for intake data"
+            required: false
+            type: string
+            format: date
+        responses:
+          200:
+            description: "Intake history retrieved successfully"
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  drinkId: { type: string }
+                  servings: { type: number }
+                  consumedAt: { type: string, format: date-time }
+                  caffeineMg: { type: number }
+          401: "Unauthorized"
+      - path: "/daily-limit"
+        method: "GET"
+        summary: "Get user's daily caffeine limit"
+        responses:
+          200:
+            description: "Daily limit retrieved successfully"
+            schema:
+              type: object
+              properties:
+                dailyLimitMg: { type: number }
+                recommendedLimitMg: { type: number }
+          401: "Unauthorized"
+
+  subscription:
+    base_path: "/api/subscription"
+    description: "Subscription management endpoints"
+    authentication: "Bearer token required"
+    guard: "AuthGuard"
+    endpoints:
+      - path: "/"
+        method: "POST"
+        summary: "Create a new subscription"
+        request_body:
+          required: true
+          schema:
+            type: object
+            required: ["planId"]
+            properties:
+              planId:
+                type: string
+                description: "ID of the subscription plan"
+        responses:
+          201:
+            description: "Subscription created successfully"
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                planId: { type: string }
+                status:
+                  { type: string, enum: ["active", "cancelled", "past_due"] }
+                currentPeriodStart: { type: string, format: date-time }
+                currentPeriodEnd: { type: string, format: date-time }
+          400: "Invalid plan ID or payment failed"
+          401: "Unauthorized"
+      - path: "/cancel"
+        method: "POST"
+        summary: "Cancel user's subscription"
+        responses:
+          200:
+            description: "Subscription cancelled successfully"
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                status: { type: string }
+                cancelledAt: { type: string, format: date-time }
+          404: "Subscription not found"
+          401: "Unauthorized"
+      - path: "/status"
+        method: "GET"
+        summary: "Get subscription status"
+        responses:
+          200:
+            description: "Subscription status retrieved successfully"
+            schema:
+              type: object
+              properties:
+                id: { type: string }
+                planId: { type: string }
+                status: { type: string }
+                currentPeriodStart: { type: string, format: date-time }
+                currentPeriodEnd: { type: string, format: date-time }
+                cancelAtPeriodEnd: { type: boolean }
+          401: "Unauthorized"
+      - path: "/webhook"
+        method: "POST"
+        summary: "Handle Stripe webhook events"
+        description: "Endpoint for Stripe to send webhook events. Requires Stripe signature verification."
+        request_body:
+          description: "Stripe webhook event payload"
+          schema:
+            type: object
+            properties:
+              id: { type: string }
+              object: { type: string }
+              api_version: { type: string }
+              created: { type: number }
+              data: { type: object }
+              livemode: { type: boolean }
+              pending_webhooks: { type: number }
+              request: { type: object }
+              type: { type: string }
+        headers:
+          - name: "stripe-signature"
+            description: "Stripe webhook signature for verification"
+            required: true
+        responses:
+          200: "Webhook processed successfully"
+          400: "Invalid webhook signature or payload"
