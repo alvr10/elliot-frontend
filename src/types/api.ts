@@ -103,8 +103,7 @@ export interface IntakeLogResponse {
 }
 
 export interface DailyLimitResponse {
-  dailyLimitMg: number;
-  recommendedLimitMg: number;
+  dailyCaffeineLimit: number;
 }
 
 // Subscription types

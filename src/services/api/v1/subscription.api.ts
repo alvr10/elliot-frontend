@@ -11,8 +11,8 @@ import {
   SubscriptionResponse,
   SubscriptionStatusResponse,
   SuccessResponse,
-} from '../../types/api';
-import apiClientInstance from './config';
+} from '../../../types/api';
+import apiClientInstance from '../config';
 
 /**
  * Subscription API Service
@@ -30,7 +30,7 @@ class SubscriptionApi {
    */
   async createSubscription(data: CreateSubscriptionDto): Promise<SubscriptionResponse> {
     try {
-      const response = await apiClientInstance.post<SubscriptionResponse>('/subscription', data);
+      const response = await apiClientInstance.post<SubscriptionResponse>('/api/v1/subscription', data);
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -48,7 +48,7 @@ class SubscriptionApi {
    */
   async cancelSubscription(): Promise<SuccessResponse> {
     try {
-      const response = await apiClientInstance.post<SuccessResponse>('/subscription/cancel');
+      const response = await apiClientInstance.post<SuccessResponse>('/api/v1/subscription/cancel');
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -66,7 +66,7 @@ class SubscriptionApi {
    */
   async getSubscriptionStatus(): Promise<SubscriptionStatusResponse> {
     try {
-      const response = await apiClientInstance.get<SubscriptionStatusResponse>('/subscription/status');
+      const response = await apiClientInstance.get<SubscriptionStatusResponse>('/api/v1/subscription/status');
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;

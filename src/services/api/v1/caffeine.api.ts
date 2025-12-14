@@ -10,8 +10,8 @@ import {
   ErrorResponse,
   IntakeLogResponse,
   LogIntakeDto,
-} from '../../types/api';
-import apiClientInstance from './config';
+} from '../../../types/api';
+import apiClientInstance from '../config';
 
 /**
  * Caffeine API Service
@@ -29,7 +29,7 @@ class CaffeineApi {
    */
   async logIntake(data: LogIntakeDto): Promise<IntakeLogResponse> {
     try {
-      const response = await apiClientInstance.post<IntakeLogResponse>('/caffeine/log-intake', data);
+      const response = await apiClientInstance.post<IntakeLogResponse>('/api/v1/caffeine/log-intake', data);
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -52,8 +52,8 @@ class CaffeineApi {
       const params: any = {};
       if (period) params.period = period;
       if (date) params.date = date;
-      const response = await apiClientInstance.get<IntakeLogResponse[]>('/caffeine/intake', { params });
-      return response.data;
+      const response = await apiClientInstance.get('/api/v1/caffeine/intake', { params });
+      return Array.isArray(response.data) ? response.data : response.data?.data || [];
     } catch (error) {
       throw error as ErrorResponse;
     }
@@ -70,7 +70,7 @@ class CaffeineApi {
    */
   async getDailyLimit(): Promise<DailyLimitResponse> {
     try {
-      const response = await apiClientInstance.get<DailyLimitResponse>('/caffeine/daily-limit');
+      const response = await apiClientInstance.get<DailyLimitResponse>('/api/v1/caffeine/daily-limit');
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;

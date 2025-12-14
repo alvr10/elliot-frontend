@@ -10,9 +10,8 @@ import {
   ErrorResponse,
   LoginDto,
   RegisterDto,
-  UserProfileResponse
-} from '../../types/api';
-import apiClientInstance from './config';
+} from '../../../types/api';
+import apiClientInstance from '../config';
 
 /**
  * Authentication API Service
@@ -27,7 +26,7 @@ class AuthApi {
    */
   async initiateGoogleOAuth(): Promise<{ url: string }> {
     try {
-      const response = await apiClientInstance.get<{ url: string }>('/auth/google');
+      const response = await apiClientInstance.get<{ url: string }>('/api/v1/auth/google');
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -44,7 +43,7 @@ class AuthApi {
    */
   async handleGoogleCallback(code: string): Promise<AuthResponse> {
     try {
-      const response = await apiClientInstance.get<AuthResponse>(`/auth/callback?code=${code}`);
+      const response = await apiClientInstance.get<AuthResponse>(`/api/v1/auth/callback?code=${code}`);
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -61,7 +60,7 @@ class AuthApi {
    */
   async register(data: RegisterDto): Promise<AuthResponse> {
     try {
-      const response = await apiClientInstance.post<AuthResponse>('/auth/register', data);
+      const response = await apiClientInstance.post<AuthResponse>('/api/v1/auth/register', data);
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -78,25 +77,7 @@ class AuthApi {
    */
   async login(data: LoginDto): Promise<AuthResponse> {
     try {
-      const response = await apiClientInstance.post<AuthResponse>('/auth/login', data);
-      return response.data;
-    } catch (error) {
-      throw error as ErrorResponse;
-    }
-  }
-
-  /**
-   * GET /auth/me
-   * Get current authenticated user profile
-   *
-   * Requires: Bearer token in Authorization header
-   *
-   * @returns UserProfileResponse with current user data
-   * @throws ErrorResponse on unauthorized
-   */
-  async getProfile(): Promise<UserProfileResponse> {
-    try {
-      const response = await apiClientInstance.get<UserProfileResponse>('/auth/me');
+      const response = await apiClientInstance.post<AuthResponse>('/api/v1/auth/login', data);
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;

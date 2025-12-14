@@ -1,0 +1,77 @@
+admin:
+  base_path: "/api/v1/admin"
+  description: "Administrative endpoints for system statistics and management"
+  authentication: "Bearer token with admin privileges required"
+  guard: "AdminGuard"
+  endpoints:
+    - path: "/stats"
+      method: "GET"
+      summary: "Get all admin statistics"
+      responses:
+        200:
+          description: "Admin statistics retrieved successfully"
+          schema:
+            type: object
+            properties:
+              totalUsers: { type: number }
+              totalSubscriptions: { type: number }
+              totalRevenue: { type: number }
+              recentSignups: { type: number }
+        401: "Unauthorized - Invalid or missing admin token"
+    - path: "/users"
+      method: "GET"
+      summary: "Get user statistics"
+      responses:
+        200:
+          description: "User statistics retrieved successfully"
+          schema:
+            type: object
+            properties:
+              totalUsers: { type: number }
+              activeUsers: { type: number }
+              newUsersThisMonth: { type: number }
+    - path: "/subscriptions"
+      method: "GET"
+      summary: "Get subscription statistics"
+      responses:
+        200:
+          description: "Subscription statistics retrieved successfully"
+          schema:
+            type: object
+            properties:
+              totalSubscriptions: { type: number }
+              activeSubscriptions: { type: number }
+              cancelledSubscriptions: { type: number }
+    - path: "/revenue"
+      method: "GET"
+      summary: "Get revenue statistics"
+      responses:
+        200:
+          description: "Revenue statistics retrieved successfully"
+          schema:
+            type: object
+            properties:
+              totalRevenue: { type: number }
+              monthlyRevenue: { type: number }
+              averageRevenuePerUser: { type: number }
+    - path: "/signups"
+      method: "GET"
+      summary: "Get recent signups"
+      parameters:
+        - name: "days"
+          in: "query"
+          description: "Number of days to look back"
+          required: false
+          type: integer
+          example: 7
+      responses:
+        200:
+          description: "Recent signups retrieved successfully"
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id: { type: string }
+                email: { type: string }
+                createdAt: { type: string, format: date-time }

@@ -15,7 +15,7 @@ import CircularProgress from "../components/CircularProgress";
 import IntakeLogItem from "../components/IntakeLogItem";
 import { AppTheme, Colors, Spacing, Typography } from "../constants";
 import { useAuth } from "../context/AuthContext";
-import { authApi, caffeineApi } from "../services/api";
+import { caffeineApi } from "../services/api";
 
 interface IntakeLog {
   id: number;
@@ -48,18 +48,17 @@ export default function HomeScreen() {
     React.useCallback(() => {
       if (user) {
         fetchDailyIntake();
-        fetchUserProfile(); // FETCH USER'S DAILY LIMIT
+        fetchUserLimit();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user])
   );
 
-  // NEW FUNCTION: Fetch user's daily limit
-  const fetchUserProfile = async () => {
+  const fetchUserLimit = async () => {
     try {
       console.log("Fetching user profile for daily limit...");
-      const profile = await authApi.getProfile();
-      const userLimit = profile.dailyLimit || 400;
+      const response = await caffeineApi.getDailyLimit();
+      const userLimit = response?.dailyCaffeineLimit || 400;
       console.log("User's daily limit:", userLimit);
       setDailyLimit(userLimit);
     } catch (error) {
@@ -74,7 +73,7 @@ export default function HomeScreen() {
       console.log("Fetching daily intake...");
       const today = new Date().toISOString().split("T")[0];
 
-      const logs = await caffeineApi.getIntakeHistory("daily", today);
+      const logs = (await caffeineApi.getIntakeHistory("daily", today)) || [];
       const total_caffeine = logs.reduce((sum, log) => sum + log.caffeineMg, 0);
       const data = { date: today, total_caffeine, logs };
       console.log("Daily intake data:", data);
@@ -89,7 +88,7 @@ export default function HomeScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchDailyIntake();
-    await fetchUserProfile(); // ALSO REFRESH USER PROFILE
+    await fetchUserLimit();
     setRefreshing(false);
   };
 
