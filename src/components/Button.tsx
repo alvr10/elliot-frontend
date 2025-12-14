@@ -1,7 +1,6 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   ActivityIndicator,
-  Animated,
   Text,
   TextStyle,
   TouchableOpacity,
@@ -38,23 +37,6 @@ const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const handlePressIn = () => {
-    Animated.timing(translateY, {
-      toValue: -4,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.timing(translateY, {
-      toValue: 0,
-      duration: 100,
-      useNativeDriver: true,
-    }).start();
-  };
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
       paddingVertical: Spacing.lg,
@@ -138,29 +120,25 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   return (
-    <Animated.View style={{ transform: [{ translateY }] }}>
-      <TouchableOpacity
-        style={[getButtonStyle(), style]}
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={disabled || loading}
-        activeOpacity={0.8}
-      >
-        {loading ? (
-          loadingText ? (
-            <Text style={[getTextStyle(), textStyle]}>{loadingText}</Text>
-          ) : (
-            <ActivityIndicator
-              size="small"
-              color={getTextStyle().color as string}
-            />
-          )
+    <TouchableOpacity
+      style={[getButtonStyle(), style]}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
+    >
+      {loading ? (
+        loadingText ? (
+          <Text style={[getTextStyle(), textStyle]}>{loadingText}</Text>
         ) : (
-          <Text style={[getTextStyle(), textStyle]}>{children}</Text>
-        )}
-      </TouchableOpacity>
-    </Animated.View>
+          <ActivityIndicator
+            size="small"
+            color={getTextStyle().color as string}
+          />
+        )
+      ) : (
+        <Text style={[getTextStyle(), textStyle]}>{children}</Text>
+      )}
+    </TouchableOpacity>
   );
 };
 

@@ -1,37 +1,216 @@
+import Card from "@/components/Card";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
   Alert,
+  Image,
   Linking,
   ScrollView,
+  StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppTheme, Spacing, Typography } from "../constants";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  bottomSheet: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "90%",
+    backgroundColor: AppTheme.primary,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: Spacing.md,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+  },
+  title: {
+    color: AppTheme.secondary,
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  closeButton: {
+    position: "absolute",
+    top: Spacing.md,
+    right: Spacing.md,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeText: {
+    color: AppTheme.secondary,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  card: {
+    backgroundColor: AppTheme.background,
+    borderRadius: 16,
+    marginBottom: Spacing.md,
+    padding: Spacing.md,
+  },
+  subscriptionCard: {
+    backgroundColor: AppTheme.background,
+    borderRadius: 16,
+    marginBottom: Spacing.md,
+  },
+  subscriptionContent: {
+    padding: Spacing.md,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  warningCard: {
+    backgroundColor: AppTheme.backgroundSecondary,
+    padding: Spacing.md,
+    borderRadius: 8,
+    marginBottom: Spacing.md,
+  },
+  warningText: {
+    color: AppTheme.text.primary,
+    textAlign: "center",
+    fontSize: Typography.size.sm,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: AppTheme.error,
+    padding: Spacing.md,
+    borderRadius: 8,
+  },
+  cancelButtonActive: {
+    backgroundColor: AppTheme.error,
+  },
+  cancelButtonDisabled: {
+    backgroundColor: AppTheme.text.disabled,
+  },
+  cancelText: {
+    color: AppTheme.error,
+    textAlign: "center",
+    fontWeight: Typography.weight.medium,
+  },
+  reactivateButton: {
+    borderWidth: 1,
+    borderColor: AppTheme.success,
+    padding: Spacing.md,
+    borderRadius: 8,
+  },
+  reactivateButtonActive: {
+    backgroundColor: AppTheme.success,
+  },
+  reactivateButtonDisabled: {
+    backgroundColor: AppTheme.text.disabled,
+  },
+  reactivateText: {
+    color: AppTheme.success,
+    textAlign: "center",
+    fontWeight: Typography.weight.medium,
+  },
+  legalText: {
+    color: AppTheme.text.primary,
+    fontWeight: Typography.weight.semibold,
+    fontSize: Typography.size.base,
+  },
+  imageContainer: {
+    alignItems: "center",
+    marginVertical: Spacing.md,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
+  },
+  lightLabel: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.sm,
+  },
+  lightValue: {
+    color: AppTheme.text.primary,
+    fontSize: Typography.size.base,
+  },
+  legalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+  },
+  buttonText: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.base,
+  },
+  dangerText: {
+    color: AppTheme.error,
+    fontSize: Typography.size.base,
+  },
+});
 
 export default function SettingsScreen() {
   const [cancelling, setCancelling] = useState(false);
   const [reactivating, setReactivating] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const navigation = useNavigation();
-  const { user, subscription, signOut, getCurrentToken, refreshSubscription } =
+  const { subscription, signOut, getCurrentToken, refreshSubscription } =
     useAuth();
   const { showNotification } = useNotification();
 
   const handleSignOut = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-          showNotification("Signed out successfully", "info");
+    Alert.alert(
+      "Cerrar sesión",
+      "¿Estás seguro de que quieres cerrar sesión?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Cerrar sesión",
+          style: "destructive",
+          onPress: async () => {
+            await signOut();
+            showNotification("Sesión cerrada exitosamente", "info");
+          },
         },
-      },
-    ]);
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Eliminar cuenta",
+      "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            // Implement delete account logic
+            showNotification("Cuenta eliminada", "info");
+          },
+        },
+      ]
+    );
   };
 
   const handleCancelSubscription = () => {
@@ -154,7 +333,7 @@ export default function SettingsScreen() {
         month: "long",
         day: "numeric",
       });
-    } catch (e) {
+    } catch {
       return "Invalid date";
     }
   };
@@ -162,16 +341,16 @@ export default function SettingsScreen() {
   const getSubscriptionStatusDisplay = () => {
     switch (subscription?.status) {
       case "active":
-        return { text: "Active", color: "text-green-400" };
+        return { text: "Active", color: AppTheme.success };
       case "active_until_period_end":
         return {
           text: "Cancelled (Active until period end)",
-          color: "text-yellow-400",
+          color: AppTheme.warning,
         };
       case "cancelled":
-        return { text: "Cancelled", color: "text-red-400" };
+        return { text: "Cancelled", color: AppTheme.error };
       default:
-        return { text: "Inactive", color: "text-gray-400" };
+        return { text: "Inactive", color: AppTheme.text.disabled };
     }
   };
 
@@ -180,182 +359,130 @@ export default function SettingsScreen() {
     subscription?.status === "active_until_period_end";
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text className="text-white text-lg">← Back</Text>
-        </TouchableOpacity>
-        <Text className="text-white text-xl font-bold">Settings</Text>
-        <View />
-      </View>
-
-      <ScrollView className="flex-1">
-        {/* Account Section */}
-        <View className="px-6 py-6">
-          <Text className="text-white text-lg font-bold mb-4">Account</Text>
-
-          <View className="bg-gray-900 rounded-lg border border-gray-700 mb-4">
-            <View className="p-4">
-              <Text className="text-gray-400 text-sm">Email</Text>
-              <Text className="text-white text-base">{user?.email}</Text>
-            </View>
+    <View style={styles.container}>
+      <View style={styles.bottomSheet}>
+        <SafeAreaView style={styles.safeArea}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Ajustes</Text>
           </View>
 
           <TouchableOpacity
-            onPress={handleSignOut}
-            className="bg-red-900 border border-red-700 p-4 rounded-lg"
+            onPress={() => navigation.goBack()}
+            style={styles.closeButton}
           >
-            <Text className="text-red-300 text-center font-medium">
-              Sign Out
-            </Text>
+            <Text style={styles.closeText}>×</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Preferences Section */}
-        <View className="px-6 py-4">
-          <Text className="text-white text-lg font-bold mb-4">Preferences</Text>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate("DailyLimit" as never)}
-            className="bg-gray-900 border border-gray-700 p-4 rounded-lg mb-4"
-          >
-            <View className="flex-row justify-between items-center">
-              <View>
-                <Text className="text-white font-medium">
-                  Daily Caffeine Limit
-                </Text>
-                <Text className="text-gray-400 text-sm">
-                  Customize your daily goal
-                </Text>
-              </View>
-              <Text className="text-gray-400">→</Text>
+          <ScrollView style={styles.scrollView}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require("../../assets/images/elliot.png")}
+                style={styles.image}
+              />
             </View>
-          </TouchableOpacity>
-        </View>
 
-        {/* Subscription Section */}
-        <View className="px-6 py-4">
-          <Text className="text-white text-lg font-bold mb-4">
-            Subscription
-          </Text>
-
-          <View className="bg-gray-900 rounded-lg border border-gray-700 mb-4">
-            <View className="p-4">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-gray-400 text-sm">Status</Text>
-                <Text
-                  className={`text-base font-medium ${subscriptionStatus.color}`}
+            <Card
+              icon="star"
+              title="Valóranos"
+              element={
+                <TouchableOpacity
+                  onPress={() =>
+                    Linking.openURL(
+                      "https://play.google.com/store/apps/details?id=com.elliot-cafe"
+                    )
+                  }
                 >
-                  {subscriptionStatus.text}
-                </Text>
-              </View>
+                  <Text style={styles.buttonText}>Valorar</Text>
+                </TouchableOpacity>
+              }
+            />
 
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-gray-400 text-sm">Price</Text>
-                <Text className="text-white text-base">€2.99/month</Text>
-              </View>
+            <Card
+              icon="notifications"
+              title="Notificaciones"
+              element={
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                />
+              }
+            />
 
-              {subscription?.expires_at && (
-                <View className="flex-row justify-between items-center mb-3">
-                  <Text className="text-gray-400 text-sm">
-                    {isCancelledButActive ? "Access Until" : "Next Billing"}
-                  </Text>
-                  <Text className="text-white text-base">
-                    {formatDate(subscription.expires_at)}
-                  </Text>
-                </View>
-              )}
+            <Card
+              icon="edit"
+              title="Modificar ingesta diaria"
+              element={
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("DailyLimit" as never)}
+                >
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    color={AppTheme.text.secondary}
+                  />
+                </TouchableOpacity>
+              }
+            />
 
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-400 text-sm">Plan</Text>
-                <Text className="text-white text-base">CaffTracker Pro</Text>
-              </View>
+            <View style={styles.card}>
+              <TouchableOpacity
+                style={styles.legalRow}
+                onPress={() => openLink("https://elliot-cafe.com/terms")}
+              >
+                <Text style={styles.legalText}>Términos y condiciones</Text>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={AppTheme.text.secondary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.legalRow}
+                onPress={() => openLink("https://elliot-cafe.com/privacy")}
+              >
+                <Text style={styles.legalText}>Política de privacidad</Text>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={AppTheme.text.secondary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.legalRow}
+                onPress={() => openLink("https://elliot-cafe.com/about")}
+              >
+                <Text style={styles.legalText}>Sobre nosotros</Text>
+                <MaterialIcons
+                  name="chevron-right"
+                  size={24}
+                  color={AppTheme.text.secondary}
+                />
+              </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Cancellation Warning */}
-          {isCancelledButActive && (
-            <View className="bg-yellow-900 border border-yellow-700 p-4 rounded-lg mb-4">
-              <Text className="text-yellow-300 text-center text-sm">
-                ⚠️ Your subscription is cancelled and will end on{" "}
-                {formatDate(subscription?.expires_at)}. You won&apos;t be
-                charged again unless you reactivate.
-              </Text>
-            </View>
-          )}
+            <Card
+              icon="logout"
+              title="Cerrar sesión"
+              element={
+                <TouchableOpacity onPress={handleSignOut}>
+                  <Text style={styles.buttonText}>Cerrar</Text>
+                </TouchableOpacity>
+              }
+            />
 
-          {/* Action Buttons */}
-          {subscription?.status === "active" && (
-            <TouchableOpacity
-              onPress={handleCancelSubscription}
-              disabled={cancelling}
-              className={`border border-red-700 p-4 rounded-lg ${
-                cancelling ? "bg-gray-800" : "bg-red-900"
-              }`}
-            >
-              <Text className="text-red-300 text-center font-medium">
-                {cancelling ? "Cancelling..." : "Cancel Subscription"}
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {isCancelledButActive && (
-            <TouchableOpacity
-              onPress={handleReactivateSubscription}
-              disabled={reactivating}
-              className={`border border-green-700 p-4 rounded-lg ${
-                reactivating ? "bg-gray-800" : "bg-green-900"
-              }`}
-            >
-              <Text className="text-green-300 text-center font-medium">
-                {reactivating ? "Reactivating..." : "Reactivate Subscription"}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Legal Section */}
-        <View className="px-6 py-4">
-          <Text className="text-white text-lg font-bold mb-4">Legal</Text>
-
-          <View className="space-y-3">
-            <TouchableOpacity
-              onPress={() => openLink("https://cafftracker.com/privacy")}
-              className="bg-gray-900 border border-gray-700 p-4 rounded-lg"
-            >
-              <View className="flex-row justify-between items-center">
-                <Text className="text-white">Privacy Policy</Text>
-                <Text className="text-gray-400">→</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => openLink("https://cafftracker.com/terms")}
-              className="bg-gray-900 border border-gray-700 p-4 rounded-lg"
-            >
-              <View className="flex-row justify-between items-center">
-                <Text className="text-white">Terms of Service</Text>
-                <Text className="text-gray-400">→</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* App Info */}
-        <View className="px-6 py-4 pb-8">
-          <Text className="text-white text-lg font-bold mb-4">App Info</Text>
-
-          <View className="bg-gray-900 rounded-lg border border-gray-700">
-            <View className="p-4">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-400 text-sm">Version</Text>
-                <Text className="text-white text-base">1.0.0</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <Card
+              icon="delete"
+              title="Eliminar cuenta"
+              element={
+                <TouchableOpacity onPress={handleDeleteAccount}>
+                  <Text style={styles.dangerText}>Eliminar</Text>
+                </TouchableOpacity>
+              }
+            />
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    </View>
   );
 }

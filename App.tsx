@@ -106,7 +106,11 @@ function AppNavigator() {
               component={ManageCustomDrinksScreen}
             />
             <Stack.Screen name="History" component={HistoryScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{ presentation: "transparentModal" }}
+            />
           </>
         )}
       </Stack.Navigator>

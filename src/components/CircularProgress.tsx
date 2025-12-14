@@ -8,6 +8,7 @@ interface CircularProgressProps {
   progress: number; // 0-100
   backgroundColor: string;
   progressColor: string;
+  centerFillColor?: string;
   children?: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export default function CircularProgress({
   progress,
   backgroundColor,
   progressColor,
+  centerFillColor = "transparent",
   children,
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
@@ -34,6 +36,15 @@ export default function CircularProgress({
       }}
     >
       <Svg width={size} height={size} style={{ position: "absolute" }}>
+        {/* Center Fill */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius - strokeWidth / 2}
+          fill={centerFillColor}
+          stroke="transparent"
+          strokeWidth={0}
+        />
         {/* Background Circle */}
         <Circle
           cx={size / 2}
