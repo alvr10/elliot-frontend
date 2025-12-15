@@ -8,7 +8,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 import { ErrorResponse } from '../../types';
 
 // API Base URL - Can be configured via environment variables
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.elliot-cafe.com/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.elliot-cafe.com';
 
 // Storage Keys
 export const STORAGE_KEYS = {

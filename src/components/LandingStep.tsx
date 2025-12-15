@@ -1,6 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppTheme, Spacing, Typography } from "../constants";
 import Button from "./Button";
@@ -27,74 +34,77 @@ const LandingStep: React.FC<LandingStepProps> = ({
 }) => {
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoiding}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Elliot</Text>
-          <Text style={styles.subtitle}>
-            Toma el control de tu consumo de cafeína
-          </Text>
-        </View>
-
-        {/* Urgency Message */}
-        <View style={styles.urgencyBox}>
-          <Text style={styles.urgencyTitle}>Tu Salud No Puede Esperar</Text>
-          <Text style={styles.urgencyText}>
-            Cada día sin un seguimiento adecuado es otro día de posible
-            sobreconsumo.
-          </Text>
-        </View>
-
-        {/* Features */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Todo Lo Que Necesitas</Text>
-          <FeatureList features={features} />
-        </View>
-
-        {/* Pricing */}
-        <View style={styles.pricingBox}>
-          <View style={styles.pricingCard}>
-            <Text style={styles.pricingAmount}>€2.99/mes</Text>
-            <Text style={styles.pricingDescription}>
-              Acceso completo a todas las funciones
-            </Text>
-            <Text style={styles.pricingNote}>
-              Menos que el costo de 3 cafés. Invierte en tu salud.
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Elliot</Text>
+            <Text style={styles.subtitle}>
+              Toma el control de tu consumo de cafeína
             </Text>
           </View>
-        </View>
 
-        {/* CTA Buttons */}
-        <View style={styles.ctaSection}>
-          <Button variant="primary" onPress={onStartJourney}>
-            Comienza Tu Viaje
-          </Button>
+          {/* Urgency Message */}
+          <View style={styles.urgencyBox}>
+            <Text style={styles.urgencyTitle}>Tu Salud No Puede Esperar</Text>
+            <Text style={styles.urgencyText}>
+              Cada día sin un seguimiento adecuado es otro día de posible
+              sobreconsumo.
+            </Text>
+          </View>
 
-          <Button variant="outline" onPress={onAlreadyHaveAccount}>
-            Ya Tengo una Cuenta
-          </Button>
+          {/* Features */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Todo Lo Que Necesitas</Text>
+            <FeatureList features={features} />
+          </View>
 
-          {__DEV__ && (
-            <Button
-              variant="error"
-              onPress={async () => {
-                await AsyncStorage.removeItem("hasSeenOnboarding");
-                // TODO: Replace with toast
-                alert("Debug: Onboarding reset! Restart the app.");
-              }}
-            >
-              DEBUG: reset onboarding
+          {/* Pricing */}
+          <View style={styles.pricingBox}>
+            <View style={styles.pricingCard}>
+              <Text style={styles.pricingAmount}>Gratis durante la beta</Text>
+              <Text style={styles.pricingDescription}>
+                Acceso completo a todas las funciones
+              </Text>
+            </View>
+          </View>
+
+          {/* CTA Buttons */}
+          <View style={styles.ctaSection}>
+            <Button variant="primary" onPress={onStartJourney}>
+              Comienza Tu Viaje
             </Button>
-          )}
 
-          <Text style={styles.footerText}>
-            Cancela en cualquier momento. Tu salud lo vale.
-          </Text>
-        </View>
-      </ScrollView>
+            <Button variant="outline" onPress={onAlreadyHaveAccount}>
+              Ya Tengo una Cuenta
+            </Button>
+
+            {__DEV__ && (
+              <Button
+                variant="error"
+                onPress={async () => {
+                  await AsyncStorage.removeItem("hasSeenOnboarding");
+                  // TODO: Replace with toast
+                  alert("Debug: Onboarding reset! Restart the app.");
+                }}
+              >
+                DEBUG: reset onboarding
+              </Button>
+            )}
+
+            <Text style={styles.footerText}>
+              Cancela en cualquier momento. Tu salud lo vale.
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -102,10 +112,16 @@ const LandingStep: React.FC<LandingStepProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.backgroundSecondary,
+  },
+  keyboardAvoiding: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     paddingHorizontal: Spacing.lg,
@@ -173,7 +189,6 @@ const styles = StyleSheet.create({
   pricingDescription: {
     color: AppTheme.text.secondary,
     textAlign: "center",
-    marginBottom: Spacing.lg,
   },
   pricingNote: {
     color: AppTheme.text.secondary,

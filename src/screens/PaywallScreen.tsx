@@ -35,6 +35,7 @@ export default function PaywallScreen() {
   const { showNotification } = useNotification();
 
   const [currentStep, setCurrentStep] = useState<FlowStep>("landing");
+  const [initialAuthMode, setInitialAuthMode] = useState<AuthMode>("signup");
 
   // Auto-progress based on user state
   useEffect(() => {
@@ -59,10 +60,12 @@ export default function PaywallScreen() {
   }, [user, subscriptionLoading]);
 
   const handleStartJourney = () => {
+    setInitialAuthMode("signup");
     setCurrentStep("auth");
   };
 
   const handleAlreadyHaveAccount = () => {
+    setInitialAuthMode("signin");
     setCurrentStep("auth");
   };
 
@@ -141,6 +144,7 @@ export default function PaywallScreen() {
           onAuth={handleAuth}
           onGoogleAuth={handleGoogleAuth}
           loading={false} // AuthStep manages its own loading state
+          initialMode={initialAuthMode}
         />
       );
     default:

@@ -1,6 +1,6 @@
+import { FontAwesome } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppTheme, Spacing, Typography } from "../constants";
-import { apiClient } from "../services/api";
 import Button from "./Button";
 import ProgressBar from "./ProgressBar";
 
@@ -23,6 +22,7 @@ interface AuthStepProps {
   onAuth: (email: string, password: string, mode: AuthMode) => Promise<void>;
   onGoogleAuth: () => void;
   loading: boolean;
+  initialMode?: AuthMode;
 }
 
 const AuthStep: React.FC<AuthStepProps> = ({
@@ -30,25 +30,14 @@ const AuthStep: React.FC<AuthStepProps> = ({
   onAuth,
   onGoogleAuth,
   loading,
+  initialMode = "signup",
 }) => {
-  const [authMode, setAuthMode] = useState<AuthMode>("signup");
+  const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleAuth = async () => {
     await onAuth(email, password, authMode);
-  };
-
-  const handleDebugHealth = async () => {
-    try {
-      const response = await apiClient.get("/v1/health");
-      Alert.alert(
-        "Health Check",
-        `Status: ${response.status}\nResponse: ${JSON.stringify(response.data)}`
-      );
-    } catch (error: any) {
-      Alert.alert("Health Check Failed", error.message || "Unknown error");
-    }
   };
 
   return (
@@ -85,67 +74,72 @@ const AuthStep: React.FC<AuthStepProps> = ({
               </Text>
             </View>
 
-            <View style={styles.authForm}>
-              <Button variant="error" onPress={onGoogleAuth}>
-                Continuar con Google
-              </Button>
+            <TouchableOpacity
+              style={[styles.googleButton, { marginBottom: Spacing.lg }]}
+              onPress={onGoogleAuth}
+              activeOpacity={0.8}
+            >
+              <FontAwesome name="google" size={24} color={AppTheme.primary} />
+              <Text style={styles.googleButtonText}>Continuar con Google</Text>
+            </TouchableOpacity>
 
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Dirección de correo electrónico"
-                placeholderTextColor="#6B7280"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={styles.textInput}
-              />
-
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder={
-                  authMode === "signup"
-                    ? "Contraseña (mín 6 caracteres)"
-                    : "Contraseña"
-                }
-                placeholderTextColor="#6B7280"
-                secureTextEntry
-                style={styles.passwordInput}
-              />
-
-              <Button
-                variant="primary"
-                onPress={handleAuth}
-                loading={loading}
-                loadingText={
-                  authMode === "signup"
-                    ? "Creando Cuenta..."
-                    : "Iniciando Sesión..."
-                }
-              >
-                {authMode === "signup" ? "Crear Cuenta" : "Iniciar Sesión"}
-              </Button>
-
-              <Button variant="outline" onPress={handleDebugHealth}>
-                Debug Health Check
-              </Button>
-
-              <TouchableOpacity
-                onPress={() =>
-                  setAuthMode(authMode === "signup" ? "signin" : "signup")
-                }
-              >
-                <Text style={styles.switchAuthText}>
-                  {authMode === "signup"
-                    ? "¿Ya tienes una cuenta? "
-                    : "¿No tienes una cuenta? "}
-                  <Text style={styles.switchAuthLink}>
-                    {authMode === "signup" ? "Iniciar Sesión" : "Registrarse"}
-                  </Text>
-                </Text>
-              </TouchableOpacity>
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>o</Text>
+              <View style={styles.dividerLine} />
             </View>
+
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Dirección de correo electrónico"
+              placeholderTextColor="#6B7280"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.textInput}
+            />
+
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder={
+                authMode === "signup"
+                  ? "Contraseña (mín 6 caracteres)"
+                  : "Contraseña"
+              }
+              placeholderTextColor="#6B7280"
+              secureTextEntry
+              style={[styles.textInput, styles.passwordInput]}
+            />
+
+            <Button
+              variant="primary"
+              onPress={handleAuth}
+              loading={loading}
+              loadingText={
+                authMode === "signup"
+                  ? "Creando Cuenta..."
+                  : "Iniciando Sesión..."
+              }
+            >
+              {authMode === "signup" ? "Crear Cuenta" : "Iniciar Sesión"}
+            </Button>
+
+            <TouchableOpacity
+              onPress={() =>
+                setAuthMode(authMode === "signup" ? "signin" : "signup")
+              }
+            >
+              <Text style={styles.switchAuthText}>
+                {authMode === "signup"
+                  ? "¿Ya tienes una cuenta? "
+                  : "¿No tienes una cuenta? "}
+                <Text style={styles.switchAuthLink}>
+                  {authMode === "signup" ? "Iniciar Sesión" : "Registrarse"}
+                </Text>
+              </Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -156,7 +150,10 @@ const AuthStep: React.FC<AuthStepProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.backgroundSecondary,
+  },
+  gradient: {
+    flex: 1,
   },
   keyboardAvoiding: {
     flex: 1,
@@ -187,19 +184,12 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.lg,
     textAlign: "center",
   },
-  authForm: {
-    backgroundColor: AppTheme.surface,
-    padding: Spacing.lg,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppTheme.border,
-    marginBottom: Spacing["2xl"],
-  },
   textInput: {
     backgroundColor: AppTheme.backgroundSecondary,
     color: AppTheme.text.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.md,
     borderRadius: 8,
     marginBottom: Spacing.lg,
     borderWidth: 1,
@@ -207,23 +197,49 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.lg,
   },
   passwordInput: {
-    backgroundColor: AppTheme.backgroundSecondary,
-    color: AppTheme.text.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    borderRadius: 8,
     marginBottom: Spacing["2xl"],
-    borderWidth: 1,
-    borderColor: AppTheme.border,
-    fontSize: Typography.size.lg,
   },
   switchAuthText: {
+    paddingTop: Spacing.md,
     color: AppTheme.text.secondary,
     textAlign: "center",
   },
   switchAuthLink: {
     color: AppTheme.primary,
     fontWeight: Typography.weight.medium,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: AppTheme.border,
+  },
+  dividerText: {
+    marginHorizontal: Spacing.md,
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.sm,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 16,
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: AppTheme.primary,
+    gap: Spacing.md,
+  },
+  googleButtonText: {
+    color: AppTheme.primary,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    textAlign: "center",
   },
 });
 
