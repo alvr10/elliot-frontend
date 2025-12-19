@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import React from "react";
 import { useAuth } from "../../src/hooks/UseAuthContext";
-import HistoryScreen from "../../src/screens/HistoryScreen";
+import HistoryScreen from "../../src/screens/history-screen";
 
 export default function HistoryPage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

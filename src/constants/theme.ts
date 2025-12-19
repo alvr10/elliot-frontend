@@ -3,7 +3,7 @@
  * Elliot uses one theme only
  */
 
-import { Colors } from './colors';
+import { Colors } from "./colors";
 
 export const Theme = {
   light: {
@@ -44,11 +44,11 @@ export const Theme = {
     borderFocused: Colors.primary,
 
     // Overlays
-    overlay: 'rgba(0, 0, 0, 0.1)',
-    overlayLight: 'rgba(0, 0, 0, 0.05)',
+    overlay: "rgba(0, 0, 0, 0.1)",
+    overlayLight: "rgba(0, 0, 0, 0.05)",
 
     // Status bar
-    statusBar: 'dark' as const,
+    statusBar: "dark" as const,
   },
 } as const;
 

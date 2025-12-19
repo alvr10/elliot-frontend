@@ -3,18 +3,19 @@
  * Elliot Frontend Application
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios, { AxiosError, AxiosInstance } from 'axios';
-import { ErrorResponse } from '../../types';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios, { AxiosError, AxiosInstance } from "axios";
+import { ErrorResponse } from "../../types";
 
 // API Base URL - Can be configured via environment variables
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.elliot-cafe.com';
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || "https://api.elliot-cafe.com";
 
 // Storage Keys
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: '@elliot/access_token',
-  REFRESH_TOKEN: '@elliot/refresh_token',
-  USER_PROFILE: '@elliot/user_profile',
+  ACCESS_TOKEN: "@elliot/access_token",
+  REFRESH_TOKEN: "@elliot/refresh_token",
+  USER_PROFILE: "@elliot/user_profile",
 } as const;
 
 /**
@@ -27,15 +28,15 @@ class ApiClient {
 
   constructor() {
     // Log API configuration on startup
-    console.log('🚀 API Client initialized');
-    console.log('📡 Base URL:', API_BASE_URL);
+    console.log("🚀 API Client initialized");
+    console.log("📡 Base URL:", API_BASE_URL);
 
     this.client = axios.create({
       baseURL: API_BASE_URL,
       timeout: 60000,
       headers: {
-        'Content-Type': 'application/json',
-        'X-Platform': 'mobile',
+        "Content-Type": "application/json",
+        "X-Platform": "mobile",
       },
       cancelToken: this.requestCancelTokenSource.token,
     });
@@ -49,30 +50,35 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request Interceptor - Add auth token
     this.client.interceptors.request.use(
-      async (config) => {
+      async config => {
         const token = await this.getAccessToken();
         const hasToken = !!token;
 
-        console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-          hasAuth: hasToken,
-          baseURL: config.baseURL
-        });
+        console.log(
+          `🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+          {
+            hasAuth: hasToken,
+            baseURL: config.baseURL,
+          }
+        );
 
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
-      (error) => {
-        console.error('❌ Request interceptor error:', error);
+      error => {
+        console.error("❌ Request interceptor error:", error);
         return Promise.reject(error);
       }
     );
 
     // Response Interceptor - Handle errors
     this.client.interceptors.response.use(
-      (response) => {
-        console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+      response => {
+        console.log(
+          `✅ API Response: ${response.status} ${response.config.url}`
+        );
         return response;
       },
       async (error: AxiosError<ErrorResponse>) => {
@@ -89,7 +95,7 @@ class ApiClient {
     try {
       return await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
     } catch (error) {
-      console.error('Error getting access token:', error);
+      console.error("Error getting access token:", error);
       return null;
     }
   }

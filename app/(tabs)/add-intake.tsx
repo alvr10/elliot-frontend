@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import React from "react";
 import { useAuth } from "../../src/hooks/UseAuthContext";
-import AddIntakeScreen from "../../src/screens/AddIntakeScreen";
+import AddIntakeScreen from "../../src/screens/add-intake-screen";
 
 export default function AddIntakePage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

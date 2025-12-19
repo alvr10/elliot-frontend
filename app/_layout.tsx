@@ -2,12 +2,12 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Linking } from "react-native";
-import { SplashScreenController } from "../src/components/SplashScreenController";
+import { SplashScreenController } from "../src/components/splash-screen-controller";
 import { NotificationProvider } from "../src/context/NotificationContext";
 import { SubscriptionProvider } from "../src/context/SubscriptionContext";
 import { useAuth } from "../src/hooks/UseAuthContext";
 import { supabase } from "../src/lib/supabase";
-import AuthProvider from "../src/providers/AuthProvider";
+import AuthProvider from "../src/providers/use-auth-context";
 
 // This is the root layout that wraps our entire app
 export default function RootLayout() {

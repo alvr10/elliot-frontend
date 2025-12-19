@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import React from "react";
 import { useAuth } from "../src/hooks/UseAuthContext";
-import DailyLimitScreen from "../src/screens/DailyLimitScreen";
+import DailyLimitScreen from "../src/screens/daily-limit-screen";
 
 export default function DailyLimitPage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

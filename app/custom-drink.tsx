@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import React from "react";
 import { useAuth } from "../src/hooks/UseAuthContext";
-import CustomDrinkScreen from "../src/screens/CustomDrinkScreen";
+import CustomDrinkScreen from "../src/screens/custom-drink-screen";
 
 export default function CustomDrinkPage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

@@ -10,8 +10,8 @@ import {
   ErrorResponse,
   LoginDto,
   RegisterDto,
-} from '../../../types/api';
-import apiClientInstance from '../config';
+} from "../../../types/api";
+import apiClientInstance from "../config";
 
 /**
  * Authentication API Service
@@ -26,7 +26,9 @@ class AuthApi {
    */
   async initiateGoogleOAuth(): Promise<{ url: string }> {
     try {
-      const response = await apiClientInstance.get<{ url: string }>('/api/v1/auth/google');
+      const response = await apiClientInstance.get<{ url: string }>(
+        "/api/v1/auth/google"
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -43,7 +45,9 @@ class AuthApi {
    */
   async handleGoogleCallback(code: string): Promise<AuthResponse> {
     try {
-      const response = await apiClientInstance.get<AuthResponse>(`/api/v1/auth/callback?code=${code}`);
+      const response = await apiClientInstance.get<AuthResponse>(
+        `/api/v1/auth/callback?code=${code}`
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -60,7 +64,10 @@ class AuthApi {
    */
   async register(data: RegisterDto): Promise<AuthResponse> {
     try {
-      const response = await apiClientInstance.post<AuthResponse>('/api/v1/auth/register', data);
+      const response = await apiClientInstance.post<AuthResponse>(
+        "/api/v1/auth/register",
+        data
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -77,7 +84,10 @@ class AuthApi {
    */
   async login(data: LoginDto): Promise<AuthResponse> {
     try {
-      const response = await apiClientInstance.post<AuthResponse>('/api/v1/auth/login', data);
+      const response = await apiClientInstance.post<AuthResponse>(
+        "/api/v1/auth/login",
+        data
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;

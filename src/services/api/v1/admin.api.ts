@@ -12,8 +12,8 @@ import {
   SignupResponse,
   SubscriptionStatsResponse,
   UserStatsResponse,
-} from '../../../types/api';
-import apiClientInstance from '../config';
+} from "../../../types/api";
+import apiClientInstance from "../config";
 
 /**
  * Admin API Service
@@ -30,7 +30,9 @@ class AdminApi {
    */
   async getStats(): Promise<AdminStatsResponse> {
     try {
-      const response = await apiClientInstance.get<AdminStatsResponse>('/api/v1/admin/stats');
+      const response = await apiClientInstance.get<AdminStatsResponse>(
+        "/api/v1/admin/stats"
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -48,7 +50,9 @@ class AdminApi {
    */
   async getUserStats(): Promise<UserStatsResponse> {
     try {
-      const response = await apiClientInstance.get<UserStatsResponse>('/api/v1/admin/users');
+      const response = await apiClientInstance.get<UserStatsResponse>(
+        "/api/v1/admin/users"
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -66,7 +70,9 @@ class AdminApi {
    */
   async getSubscriptionStats(): Promise<SubscriptionStatsResponse> {
     try {
-      const response = await apiClientInstance.get<SubscriptionStatsResponse>('/api/v1/admin/subscriptions');
+      const response = await apiClientInstance.get<SubscriptionStatsResponse>(
+        "/api/v1/admin/subscriptions"
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -84,7 +90,9 @@ class AdminApi {
    */
   async getRevenueStats(): Promise<RevenueStatsResponse> {
     try {
-      const response = await apiClientInstance.get<RevenueStatsResponse>('/api/v1/admin/revenue');
+      const response = await apiClientInstance.get<RevenueStatsResponse>(
+        "/api/v1/admin/revenue"
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
@@ -104,7 +112,10 @@ class AdminApi {
   async getRecentSignups(days?: number): Promise<SignupResponse[]> {
     try {
       const params = days ? { days: days.toString() } : {};
-      const response = await apiClientInstance.get<SignupResponse[]>('/api/v1/admin/signups', { params });
+      const response = await apiClientInstance.get<SignupResponse[]>(
+        "/api/v1/admin/signups",
+        { params }
+      );
       return response.data;
     } catch (error) {
       throw error as ErrorResponse;
