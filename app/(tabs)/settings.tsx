@@ -1,7 +1,7 @@
+import { useAuth } from "@/hooks";
+import { SettingsScreen } from "@/screens";
 import { Redirect } from "expo-router";
 import React from "react";
-import { useAuth } from "../../src/hooks/UseAuthContext";
-import SettingsScreen from "../../src/screens/settings-screen";
 
 export default function SettingsPage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

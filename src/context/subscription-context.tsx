@@ -1,7 +1,7 @@
+import { useAuth } from "@/hooks";
 import { subscriptionApi } from "@/services/api";
 import React, { createContext, useContext } from "react";
 import { Alert } from "react-native";
-import { useAuth } from "../hooks/UseAuthContext";
 
 interface SubscriptionContextType {
   createSubscription: () => Promise<boolean>;

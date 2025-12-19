@@ -1,99 +1,217 @@
+import { Colors, Spacing, Typography } from "@/constants";
+import { useAuth } from "@/hooks";
+import { caffeineApi } from "@/services/api";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../hooks/UseAuthContext";
 
 interface DailyTotal {
   [date: string]: number;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.black,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: Colors.black,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: Colors.white,
+    fontSize: Typography.size.lg,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray800,
+  },
+  headerTitle: {
+    color: Colors.white,
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  backButton: {
+    color: Colors.white,
+    fontSize: Typography.size.lg,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  chartContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+  },
+  chartTitle: {
+    color: Colors.white,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    marginBottom: Spacing.md,
+  },
+  chartWrapper: {
+    backgroundColor: Colors.gray900,
+    borderRadius: 8,
+    padding: Spacing.md,
+    position: "relative",
+  },
+  dailyLimitBadge: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    backgroundColor: Colors.overlay,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  dailyLimitText: {
+    color: Colors.gray400,
+    fontSize: Typography.size.xs,
+  },
+  statsContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  sectionTitle: {
+    color: Colors.white,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    marginBottom: Spacing.md,
+  },
+  statCard: {
+    backgroundColor: Colors.gray900,
+    padding: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray700,
+    marginBottom: Spacing.md,
+  },
+  statRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  statLabel: {
+    color: Colors.gray300,
+    fontSize: Typography.size.base,
+  },
+  statValue: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  statValueNormal: {
+    color: Colors.white,
+  },
+  statValueSuccess: {
+    color: Colors.success,
+  },
+  statValueDanger: {
+    color: Colors.error,
+  },
+  recentDaysContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingBottom: Spacing["2xl"],
+  },
+  emptyState: {
+    backgroundColor: Colors.gray900,
+    padding: Spacing.lg,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray700,
+  },
+  emptyStateText: {
+    color: Colors.gray400,
+    fontSize: Typography.size.base,
+    textAlign: "center",
+  },
+  dayItem: {
+    backgroundColor: Colors.gray900,
+    padding: Spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray700,
+    marginBottom: Spacing.sm,
+  },
+  dayRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dayDate: {
+    color: Colors.white,
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.medium,
+  },
+  dayValues: {
+    alignItems: "flex-end",
+  },
+  dayAmount: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+  },
+  dayDifference: {
+    color: Colors.gray400,
+    fontSize: Typography.size.xs,
+  },
+});
 
 export default function HistoryScreen() {
   const [dailyTotals, setDailyTotals] = useState<DailyTotal>({});
   const [dailyLimit, setDailyLimit] = useState(400); // USER'S CUSTOM LIMIT
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { user, getCurrentToken } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
       fetchHistory();
-      fetchUserProfile(); // FETCH USER'S DAILY LIMIT
+      fetchDailyLimit(); // FETCH USER'S DAILY LIMIT
     }
   }, [user]);
 
-  // NEW FUNCTION: Fetch user's daily limit
-  const fetchUserProfile = async () => {
+  // NEW FUNCTION: Fetch user's daily limit using API
+  const fetchDailyLimit = async () => {
     try {
-      const token = await getCurrentToken();
-      if (!token) return;
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/user/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setDailyLimit(data.daily_caffeine_limit || 400);
-      }
+      const response = await caffeineApi.getDailyLimit();
+      setDailyLimit(response.dailyCaffeineLimit || 400);
     } catch (error) {
-      console.error("Failed to fetch user profile:", error);
+      console.error("Failed to fetch daily limit:", error);
     }
   };
 
+  // NEW FUNCTION: Fetch history using API
   const fetchHistory = async () => {
     try {
       console.log("Fetching history...");
-      const token = await getCurrentToken();
+      const historyData = await caffeineApi.getIntakeHistory();
 
-      if (!token) {
-        console.error("No token available");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/intake/history`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      // Transform the API response to match our expected format
+      const transformedData: DailyTotal = {};
+      historyData.forEach(item => {
+        const date = new Date(item.consumedAt).toISOString().split("T")[0];
+        if (!transformedData[date]) {
+          transformedData[date] = 0;
         }
-      );
+        transformedData[date] += item.caffeineMg;
+      });
 
-      console.log("History response status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("History fetch error:", errorText);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("History data:", data);
-
-      // Ensure all values are valid numbers
-      const sanitizedData: DailyTotal = {};
-      for (const [date, total] of Object.entries(data)) {
-        const numTotal = Number(total);
-        if (!isNaN(numTotal) && isFinite(numTotal)) {
-          sanitizedData[date] = numTotal;
-        } else {
-          console.warn(`Invalid caffeine total for date ${date}:`, total);
-          sanitizedData[date] = 0;
-        }
-      }
-
-      setDailyTotals(sanitizedData);
+      setDailyTotals(transformedData);
     } catch (error) {
       console.error("Failed to fetch history:", error);
     } finally {
@@ -119,7 +237,7 @@ export default function HistoryScreen() {
               return new Date(date).toLocaleDateString("en-US", {
                 weekday: "short",
               });
-            } catch (e) {
+            } catch {
               return "Invalid";
             }
           })
@@ -150,39 +268,37 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-black justify-center items-center">
-        <Text className="text-white">Loading history...</Text>
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading history...</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text className="text-white text-lg">← Back</Text>
+          <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
-        <Text className="text-white text-xl font-bold">Intake History</Text>
+        <Text style={styles.headerTitle}>Intake History</Text>
         <View />
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView style={styles.scrollView}>
         {/* Chart */}
         {last7Days.length > 0 && (
-          <View className="px-6 py-6">
-            <Text className="text-white text-lg font-bold mb-4">
-              Last 7 Days
-            </Text>
-            <View className="bg-gray-900 rounded-lg p-4">
+          <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Last 7 Days</Text>
+            <View style={styles.chartWrapper}>
               <LineChart
                 data={chartData}
                 width={screenWidth - 80}
                 height={200}
                 chartConfig={{
-                  backgroundColor: "#1F2937",
-                  backgroundGradientFrom: "#1F2937",
-                  backgroundGradientTo: "#1F2937",
+                  backgroundColor: Colors.gray900,
+                  backgroundGradientFrom: Colors.gray900,
+                  backgroundGradientTo: Colors.gray900,
                   decimalPlaces: 0,
                   color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                   labelColor: (opacity = 1) =>
@@ -193,7 +309,7 @@ export default function HistoryScreen() {
                   propsForDots: {
                     r: "4",
                     strokeWidth: "2",
-                    stroke: "#FFFFFF",
+                    stroke: Colors.white,
                   },
                 }}
                 bezier
@@ -201,137 +317,134 @@ export default function HistoryScreen() {
                   borderRadius: 8,
                 }}
               />
-              <View className="absolute top-4 right-4">
-                <View className="bg-black bg-opacity-50 px-2 py-1 rounded">
-                  <Text className="text-gray-300 text-xs">
-                    Daily limit: {dailyLimit}mg
-                  </Text>
-                </View>
+              <View style={styles.dailyLimitBadge}>
+                <Text style={styles.dailyLimitText}>
+                  Daily limit: {dailyLimit}mg
+                </Text>
               </View>
             </View>
           </View>
         )}
 
         {/* Stats */}
-        <View className="px-6 py-4">
-          <Text className="text-white text-lg font-bold mb-4">Statistics</Text>
-          <View className="space-y-4">
-            <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-300">Average Daily Intake</Text>
-                <Text className="text-white text-xl font-bold">
-                  {averageIntake}mg
-                </Text>
-              </View>
-            </View>
+        <View style={styles.statsContainer}>
+          <Text style={styles.sectionTitle}>Statistics</Text>
 
-            <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-300">Days Over Your Limit</Text>
-                <Text
-                  className={`text-xl font-bold ${
-                    daysOverLimit > 0 ? "text-red-400" : "text-green-400"
-                  }`}
-                >
-                  {daysOverLimit}/{totalDays}
-                </Text>
-              </View>
+          <View style={styles.statCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Average Daily Intake</Text>
+              <Text style={[styles.statValue, styles.statValueNormal]}>
+                {averageIntake}mg
+              </Text>
             </View>
+          </View>
 
-            <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-300">Highest Single Day</Text>
-                <Text
-                  className={`text-xl font-bold ${
-                    maxIntake > dailyLimit ? "text-red-400" : "text-white"
-                  }`}
-                >
-                  {maxIntake}mg
-                </Text>
-              </View>
+          <View style={styles.statCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Days Over Your Limit</Text>
+              <Text
+                style={[
+                  styles.statValue,
+                  daysOverLimit > 0
+                    ? styles.statValueDanger
+                    : styles.statValueSuccess,
+                ]}
+              >
+                {daysOverLimit}/{totalDays}
+              </Text>
             </View>
+          </View>
 
-            <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-300">Your Daily Limit</Text>
-                <Text className="text-white text-xl font-bold">
-                  {dailyLimit}mg
-                </Text>
-              </View>
+          <View style={styles.statCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Highest Single Day</Text>
+              <Text
+                style={[
+                  styles.statValue,
+                  maxIntake > dailyLimit
+                    ? styles.statValueDanger
+                    : styles.statValueNormal,
+                ]}
+              >
+                {maxIntake}mg
+              </Text>
             </View>
+          </View>
 
-            <View className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-gray-300">Days Tracked</Text>
-                <Text className="text-white text-xl font-bold">
-                  {totalDays}
-                </Text>
-              </View>
+          <View style={styles.statCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Your Daily Limit</Text>
+              <Text style={[styles.statValue, styles.statValueNormal]}>
+                {dailyLimit}mg
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.statCard}>
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Days Tracked</Text>
+              <Text style={[styles.statValue, styles.statValueNormal]}>
+                {totalDays}
+              </Text>
             </View>
           </View>
         </View>
 
         {/* Recent Days */}
-        <View className="px-6 py-4 pb-8">
-          <Text className="text-white text-lg font-bold mb-4">Recent Days</Text>
+        <View style={styles.recentDaysContainer}>
+          <Text style={styles.sectionTitle}>Recent Days</Text>
           {sortedEntries.length === 0 ? (
-            <View className="bg-gray-900 p-6 rounded-lg border border-gray-700">
-              <Text className="text-gray-400 text-center">
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
                 No intake data yet. Start logging your caffeine to see your
                 history!
               </Text>
             </View>
           ) : (
-            <View className="space-y-3">
-              {sortedEntries
-                .slice(-10)
-                .reverse()
-                .map(([date, total]) => {
-                  // Safe date formatting
-                  let formattedDate;
-                  try {
-                    formattedDate = new Date(date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    });
-                  } catch (e) {
-                    formattedDate = date;
-                  }
+            sortedEntries
+              .slice(-10)
+              .reverse()
+              .map(([date, total]) => {
+                // Safe date formatting
+                let formattedDate;
+                try {
+                  formattedDate = new Date(date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  });
+                } catch {
+                  formattedDate = date;
+                }
 
-                  // Safe number handling
-                  const safeTotal = Number(total) || 0;
+                // Safe number handling
+                const safeTotal = Number(total) || 0;
 
-                  return (
-                    <View
-                      key={date}
-                      className="bg-gray-900 p-4 rounded-lg border border-gray-700"
-                    >
-                      <View className="flex-row justify-between items-center">
-                        <Text className="text-white font-medium">
-                          {formattedDate}
+                return (
+                  <View key={date} style={styles.dayItem}>
+                    <View style={styles.dayRow}>
+                      <Text style={styles.dayDate}>{formattedDate}</Text>
+                      <View style={styles.dayValues}>
+                        <Text
+                          style={[
+                            styles.dayAmount,
+                            safeTotal > dailyLimit
+                              ? styles.statValueDanger
+                              : styles.statValueNormal,
+                          ]}
+                        >
+                          {safeTotal}mg
                         </Text>
-                        <View className="items-end">
-                          <Text
-                            className={`text-lg font-bold ${
-                              safeTotal > dailyLimit
-                                ? "text-red-400"
-                                : "text-white"
-                            }`}
-                          >
-                            {safeTotal}mg
-                          </Text>
-                          <Text className="text-gray-400 text-xs">
-                            {safeTotal > dailyLimit
-                              ? `+${safeTotal - dailyLimit}mg over`
-                              : `${dailyLimit - safeTotal}mg under`}
-                          </Text>
-                        </View>
+                        <Text style={styles.dayDifference}>
+                          {safeTotal > dailyLimit
+                            ? `+${safeTotal - dailyLimit}mg over`
+                            : `${dailyLimit - safeTotal}mg under`}
+                        </Text>
                       </View>
                     </View>
-                  );
-                })}
-            </View>
+                  </View>
+                );
+              })
           )}
         </View>
       </ScrollView>

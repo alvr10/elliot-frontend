@@ -1,12 +1,10 @@
+import { AuthStep, LandingStep } from "@/components";
+import { Colors, Spacing, Typography } from "@/constants";
+import { useNotification, useSubscription } from "@/context";
+import { useAuth } from "@/hooks";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AuthStep from "../components/AuthStep";
-import LandingStep from "../components/LandingStep";
-import { Colors, Spacing, Typography } from "../constants";
-import { useNotification } from "../context/NotificationContext";
-import { useSubscription } from "../context/SubscriptionContext";
-import { useAuth } from "../hooks/UseAuthContext";
 
 type FlowStep = "landing" | "auth";
 type AuthMode = "signin" | "signup";

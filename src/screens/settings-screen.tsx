@@ -1,4 +1,7 @@
-import Card from "@/components/Card";
+import { Card } from "@/components";
+import { AppTheme, Spacing, Typography } from "@/constants";
+import { useNotification } from "@/context";
+import { useAuth } from "@/hooks";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -14,9 +17,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppTheme, Spacing, Typography } from "../constants";
-import { useNotification } from "../context/NotificationContext";
-import { useAuth } from "../hooks/UseAuthContext";
 
 const styles = StyleSheet.create({
   container: {

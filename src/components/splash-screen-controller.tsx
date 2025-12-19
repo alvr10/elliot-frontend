@@ -1,9 +1,9 @@
-import { useAuthContext } from "@/hooks/UseAuthContext";
+import { useAuthContext } from "@/hooks";
 import * as SplashScreen from "expo-splash-screen";
 
 SplashScreen.preventAutoHideAsync();
 
-export function SplashScreenController() {
+export default function SplashScreenController() {
   const { isLoading } = useAuthContext();
 
   if (!isLoading) {

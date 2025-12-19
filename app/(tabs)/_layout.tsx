@@ -23,15 +23,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="add-intake"
-        options={{
-          title: "Add",
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="add-circle" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="history"
         options={{
           title: "History",

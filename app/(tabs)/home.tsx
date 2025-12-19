@@ -1,7 +1,7 @@
+import { useAuth } from "@/hooks";
+import HomeScreen from "@/screens/home-screen";
 import { Redirect } from "expo-router";
 import React from "react";
-import { useAuth } from "../../src/hooks/UseAuthContext";
-import HomeScreen from "../../src/screens/home-screen";
 
 export default function HomePage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

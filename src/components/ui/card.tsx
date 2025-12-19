@@ -1,7 +1,7 @@
+import { AppTheme, Spacing, Typography } from "@/constants";
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AppTheme, Spacing, Typography } from "../constants";
 
 interface CardProps {
   icon: keyof typeof MaterialIcons.glyphMap;

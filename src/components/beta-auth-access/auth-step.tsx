@@ -1,3 +1,5 @@
+import { Button, ProgressBar } from "@/components";
+import { AppTheme, Spacing, Typography } from "@/constants";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
@@ -11,9 +13,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppTheme, Spacing, Typography } from "../constants";
-import Button from "./Button";
-import ProgressBar from "./ProgressBar";
 
 type AuthMode = "signin" | "signup";
 

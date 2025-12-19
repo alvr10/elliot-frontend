@@ -1,4 +1,4 @@
-import { AuthContext } from "@/hooks/UseAuthContext";
+import { AuthContext } from "@/hooks";
 import { supabase } from "@/lib/supabase";
 import { apiClient } from "@/services/api";
 import { STORAGE_KEYS } from "@/services/api/config";

@@ -1,3 +1,7 @@
+import { Button } from "@/components";
+import { AppTheme, Spacing, Typography } from "@/constants";
+import { useNotification } from "@/context";
+import { useAuth } from "@/hooks";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
@@ -11,10 +15,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Button from "../components/Button";
-import { AppTheme, Spacing, Typography } from "../constants";
-import { useNotification } from "../context/NotificationContext";
-import { useAuth } from "../hooks/UseAuthContext";
 
 type AuthMode = "signin" | "signup";
 

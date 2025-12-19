@@ -7,7 +7,11 @@
     "paths": {
       "@/*": ["./src/*"],
       "@/assets/*": ["./assets/*"],
-      "@/hooks/*": ["./src/hooks/*"]
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/screens/*": ["./src/screens/*"],
+      "@/providers/*": ["./src/providers/*"],
+      "@/constants/*": ["./src/constants/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"]

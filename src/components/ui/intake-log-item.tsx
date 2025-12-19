@@ -1,9 +1,9 @@
 import { AppTheme, Colors, Spacing, Typography } from "@/constants";
+import { useNotification } from "@/context";
+import { useAuth } from "@/hooks";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useNotification } from "../context/NotificationContext";
-import { useAuth } from "../hooks/UseAuthContext";
 
 interface IntakeLog {
   id: number;

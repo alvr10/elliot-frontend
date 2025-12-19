@@ -1,3 +1,5 @@
+import { Button, FeatureList } from "@/components";
+import { AppTheme, Spacing, Typography } from "@/constants";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -8,9 +10,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppTheme, Spacing, Typography } from "../constants";
-import Button from "./Button";
-import FeatureList from "./FeatureList";
 
 interface LandingStepProps {
   onStartJourney: () => void;

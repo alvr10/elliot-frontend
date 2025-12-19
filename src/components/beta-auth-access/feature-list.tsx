@@ -1,6 +1,6 @@
+import { AppTheme, Spacing, Typography } from "@/constants";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AppTheme, Spacing, Typography } from "../constants";
 
 interface FeatureListProps {
   features: string[];

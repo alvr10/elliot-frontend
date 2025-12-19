@@ -1,6 +1,6 @@
+import { useAuth } from "@/hooks";
 import { Redirect } from "expo-router";
 import React from "react";
-import { useAuth } from "../src/hooks/UseAuthContext";
 
 export default function IndexPage() {
   const { user, subscription, loading, subscriptionLoading } = useAuth();

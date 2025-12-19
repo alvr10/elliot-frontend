@@ -1,3 +1,7 @@
+import { CircularProgress, IntakeLogItem } from "@/components";
+import { AppTheme, Colors, Spacing, Typography } from "@/constants";
+import { useAuth } from "@/hooks";
+import { caffeineApi } from "@/services/api";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -12,11 +16,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CircularProgress from "../components/CircularProgress";
-import IntakeLogItem from "../components/IntakeLogItem";
-import { AppTheme, Colors, Spacing, Typography } from "../constants";
-import { useAuth } from "../hooks/UseAuthContext";
-import { caffeineApi } from "../services/api";
 
 interface IntakeLog {
   id: number;

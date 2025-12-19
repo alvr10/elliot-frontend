@@ -1,3 +1,4 @@
+import { AppTheme, Colors, Spacing, Typography } from "@/constants";
 import React from "react";
 import {
   ActivityIndicator,
@@ -6,7 +7,6 @@ import {
   TouchableOpacity,
   ViewStyle,
 } from "react-native";
-import { AppTheme, Colors, Spacing, Typography } from "../constants";
 
 type ButtonVariant =
   | "primary"

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import FloatingNotification from "../components/FloatingNotification";
+import FloatingNotification from "../components/floating-notification";
 
 interface NotificationContextType {
   showNotification: (

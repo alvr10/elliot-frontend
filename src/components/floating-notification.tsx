@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions, Text, View } from "react-native";
+import { Animated, Text, View } from "react-native";
 
 interface FloatingNotificationProps {
   message: string;
@@ -7,9 +7,6 @@ interface FloatingNotificationProps {
   visible: boolean;
   onHide: () => void;
 }
-
-const { width } = Dimensions.get("window");
-
 export default function FloatingNotification({
   message,
   type,
