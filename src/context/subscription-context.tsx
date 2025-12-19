@@ -44,11 +44,19 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
       ]);
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Beta subscription creation failed:", error);
 
       let errorMessage = "Please try again.";
-      if (error instanceof Error) {
+
+      // Handle specific error cases
+      if (error?.response?.status === 401) {
+        errorMessage = "Authentication error. Please sign in again.";
+      } else if (error?.response?.status === 404) {
+        errorMessage = "Service unavailable. Please try again later.";
+      } else if (error?.response?.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (error instanceof Error) {
         errorMessage = error.message;
       }
 

@@ -18,7 +18,7 @@ type AuthMode = "signin" | "signup";
 
 interface AuthStepProps {
   onBack: () => void;
-  onAuth: (email: string, password: string, mode: AuthMode) => Promise<void>;
+  onAuth: (email: string, name: string, mode: AuthMode) => Promise<void>;
   onGoogleAuth: () => void;
   loading: boolean;
   initialMode?: AuthMode;
@@ -33,10 +33,8 @@ const AuthStep: React.FC<AuthStepProps> = ({
 }) => {
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Email validation function
@@ -45,34 +43,9 @@ const AuthStep: React.FC<AuthStepProps> = ({
     return emailRegex.test(email);
   };
 
-  // Password validation function
-  const validatePassword = (
-    password: string
-  ): { isValid: boolean; message: string } => {
-    if (password.length < 6) {
-      return {
-        isValid: false,
-        message: "La contraseña debe tener al menos 6 caracteres",
-      };
-    }
-
-    // Check for at least one number
-    if (!/\d/.test(password)) {
-      return {
-        isValid: false,
-        message: "La contraseña debe incluir al menos un número",
-      };
-    }
-
-    // Check for at least one letter
-    if (!/[a-zA-Z]/.test(password)) {
-      return {
-        isValid: false,
-        message: "La contraseña debe incluir al menos una letra",
-      };
-    }
-
-    return { isValid: true, message: "" };
+  // Name validation function
+  const validateName = (name: string): boolean => {
+    return name.trim().length >= 2;
   };
 
   // Validate form on input change
@@ -86,19 +59,9 @@ const AuthStep: React.FC<AuthStepProps> = ({
     }
   }, [email]);
 
-  useEffect(() => {
-    if (password) {
-      const validation = validatePassword(password);
-      setPasswordError(validation.message);
-    } else {
-      setPasswordError("");
-    }
-  }, [password]);
-
   const handleAuth = async () => {
     // Reset errors
     setEmailError("");
-    setPasswordError("");
 
     // Validate email
     if (!email) {
@@ -111,21 +74,15 @@ const AuthStep: React.FC<AuthStepProps> = ({
       return;
     }
 
-    // Validate password
-    if (!password) {
-      setPasswordError("La contraseña es requerida");
-      return;
-    }
-
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      setPasswordError(passwordValidation.message);
+    // Validate name for signup
+    if (authMode === "signup" && !validateName(name)) {
+      setEmailError("El nombre debe tener al menos 2 caracteres");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onAuth(email, password, authMode);
+      await onAuth(email, name, authMode);
     } catch (error) {
       console.error("Authentication error:", error);
     } finally {
@@ -185,7 +142,7 @@ const AuthStep: React.FC<AuthStepProps> = ({
               <View style={styles.dividerLine} />
             </View>
 
-            <View>
+            <View style={styles.fieldsContainer}>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -208,48 +165,25 @@ const AuthStep: React.FC<AuthStepProps> = ({
               ) : null}
             </View>
 
-            <View>
-              <View style={styles.passwordContainer}>
+            {authMode === "signup" && (
+              <View style={styles.fieldsContainer}>
                 <TextInput
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder={
-                    authMode === "signup"
-                      ? "Contraseña (mín 6 caracteres, 1 número, 1 letra)"
-                      : "Contraseña"
-                  }
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Nombre completo"
                   placeholderTextColor="#6B7280"
-                  secureTextEntry={!showPassword}
+                  autoCapitalize="words"
                   style={[
                     styles.textInput,
-                    styles.passwordInputField,
-                    passwordError ? styles.inputError : null,
+                    emailError ? styles.inputError : null,
                     isSubmitting ? styles.inputDisabled : null,
                   ]}
                   editable={!isSubmitting}
-                  accessibilityLabel="Contraseña"
-                  accessibilityHint="Ingresa tu contraseña"
+                  accessibilityLabel="Nombre completo"
+                  accessibilityHint="Ingresa tu nombre completo"
                 />
-                <TouchableOpacity
-                  style={styles.passwordToggle}
-                  onPress={() => setShowPassword(!showPassword)}
-                  disabled={isSubmitting}
-                  accessibilityLabel={
-                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-                  }
-                  accessibilityRole="button"
-                >
-                  <FontAwesome
-                    name={showPassword ? "eye-slash" : "eye"}
-                    size={20}
-                    color={AppTheme.text.secondary}
-                  />
-                </TouchableOpacity>
               </View>
-              {passwordError ? (
-                <Text style={styles.errorText}>{passwordError}</Text>
-              ) : null}
-            </View>
+            )}
 
             <Button
               variant="primary"
@@ -257,12 +191,16 @@ const AuthStep: React.FC<AuthStepProps> = ({
               loading={loading || isSubmitting}
               loadingText={
                 authMode === "signup"
-                  ? "Creando Cuenta..."
-                  : "Iniciando Sesión..."
+                  ? "Enviando enlace mágico..."
+                  : "Enviando enlace mágico..."
               }
-              disabled={!!emailError || !!passwordError || !email || !password}
+              disabled={
+                !!emailError ||
+                !email ||
+                (authMode === "signup" && !validateName(name))
+              }
             >
-              {authMode === "signup" ? "Crear Cuenta" : "Iniciar Sesión"}
+              {authMode === "signup" ? "Registrarse" : "Enviar enlace mágico"}
             </Button>
 
             <TouchableOpacity
@@ -335,7 +273,6 @@ const styles = StyleSheet.create({
     color: AppTheme.text.primary,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    marginTop: Spacing.md,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: AppTheme.border,
@@ -346,22 +283,6 @@ const styles = StyleSheet.create({
   },
   inputDisabled: {
     opacity: 0.5,
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  passwordInputField: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  passwordToggle: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    position: "absolute",
-    right: 0,
   },
   errorText: {
     color: "#EF4444", // red-500
@@ -392,6 +313,9 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.md,
     color: AppTheme.text.secondary,
     fontSize: Typography.size.sm,
+  },
+  fieldsContainer: {
+    marginBottom: Spacing.md,
   },
   googleButton: {
     flexDirection: "row",

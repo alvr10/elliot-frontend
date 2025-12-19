@@ -24,10 +24,8 @@ export default function AuthScreen() {
 
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Email validation function
@@ -36,34 +34,9 @@ export default function AuthScreen() {
     return emailRegex.test(email);
   };
 
-  // Password validation function
-  const validatePassword = (
-    password: string
-  ): { isValid: boolean; message: string } => {
-    if (password.length < 6) {
-      return {
-        isValid: false,
-        message: "La contraseña debe tener al menos 6 caracteres",
-      };
-    }
-
-    // Check for at least one number
-    if (!/\d/.test(password)) {
-      return {
-        isValid: false,
-        message: "La contraseña debe incluir al menos un número",
-      };
-    }
-
-    // Check for at least one letter
-    if (!/[a-zA-Z]/.test(password)) {
-      return {
-        isValid: false,
-        message: "La contraseña debe incluir al menos una letra",
-      };
-    }
-
-    return { isValid: true, message: "" };
+  // Name validation function
+  const validateName = (name: string): boolean => {
+    return name.trim().length >= 2;
   };
 
   // Validate form on input change
@@ -77,19 +50,9 @@ export default function AuthScreen() {
     }
   }, [email]);
 
-  useEffect(() => {
-    if (password) {
-      const validation = validatePassword(password);
-      setPasswordError(validation.message);
-    } else {
-      setPasswordError("");
-    }
-  }, [password]);
-
   const handleAuth = async () => {
     // Reset errors
     setEmailError("");
-    setPasswordError("");
 
     // Validate email
     if (!email) {
@@ -102,24 +65,18 @@ export default function AuthScreen() {
       return;
     }
 
-    // Validate password
-    if (!password) {
-      setPasswordError("La contraseña es requerida");
-      return;
-    }
-
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      setPasswordError(passwordValidation.message);
+    // Validate name for signup
+    if (authMode === "signup" && !validateName(name)) {
+      setEmailError("El nombre debe tener al menos 2 caracteres");
       return;
     }
 
     setIsSubmitting(true);
     try {
       if (authMode === "signup") {
-        await signUpWithEmail(email, password);
+        await signUpWithEmail(email, name);
       } else {
-        await signInWithEmail(email, password);
+        await signInWithEmail(email);
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -217,48 +174,25 @@ export default function AuthScreen() {
                 ) : null}
               </View>
 
-              <View>
-                <View style={styles.passwordContainer}>
+              {authMode === "signup" && (
+                <View>
                   <TextInput
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder={
-                      authMode === "signup"
-                        ? "Contraseña (mín 6 caracteres, 1 número, 1 letra)"
-                        : "Contraseña"
-                    }
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Nombre completo"
                     placeholderTextColor="#6B7280"
-                    secureTextEntry={!showPassword}
+                    autoCapitalize="words"
                     style={[
                       styles.textInput,
-                      styles.passwordInputField,
-                      passwordError ? styles.inputError : null,
+                      emailError ? styles.inputError : null,
                       isSubmitting ? styles.inputDisabled : null,
                     ]}
                     editable={!isSubmitting}
-                    accessibilityLabel="Contraseña"
-                    accessibilityHint="Ingresa tu contraseña"
+                    accessibilityLabel="Nombre completo"
+                    accessibilityHint="Ingresa tu nombre completo"
                   />
-                  <TouchableOpacity
-                    style={styles.passwordToggle}
-                    onPress={() => setShowPassword(!showPassword)}
-                    disabled={isSubmitting}
-                    accessibilityLabel={
-                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-                    }
-                    accessibilityRole="button"
-                  >
-                    <FontAwesome
-                      name={showPassword ? "eye-slash" : "eye"}
-                      size={20}
-                      color={AppTheme.text.secondary}
-                    />
-                  </TouchableOpacity>
                 </View>
-                {passwordError ? (
-                  <Text style={styles.errorText}>{passwordError}</Text>
-                ) : null}
-              </View>
+              )}
 
               <Button
                 variant="primary"
@@ -266,14 +200,16 @@ export default function AuthScreen() {
                 loading={isSubmitting}
                 loadingText={
                   authMode === "signup"
-                    ? "Creando Cuenta..."
-                    : "Iniciando Sesión..."
+                    ? "Enviando enlace mágico..."
+                    : "Enviando enlace mágico..."
                 }
                 disabled={
-                  !!emailError || !!passwordError || !email || !password
+                  !!emailError ||
+                  !email ||
+                  (authMode === "signup" && !validateName(name))
                 }
               >
-                {authMode === "signup" ? "Crear Cuenta" : "Iniciar Sesión"}
+                {authMode === "signup" ? "Registrarse" : "Enviar enlace mágico"}
               </Button>
 
               <TouchableOpacity
@@ -372,22 +308,6 @@ const styles = StyleSheet.create({
   },
   inputDisabled: {
     opacity: 0.5,
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  passwordInputField: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  passwordToggle: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    position: "absolute",
-    right: 0,
   },
   errorText: {
     color: "#EF4444", // red-500

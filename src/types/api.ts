@@ -39,13 +39,15 @@ export interface AuthResponse {
 
 export interface LoginDto {
   email: string;
-  password: string;
 }
 
 export interface RegisterDto {
   email: string;
-  password: string;
   name: string;
+}
+
+export interface MagicLinkResponse {
+  message: string;
 }
 
 export interface UserProfileResponse {

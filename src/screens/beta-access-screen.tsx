@@ -2,6 +2,7 @@ import { AuthStep, LandingStep } from "@/components";
 import { Colors, Spacing, Typography } from "@/constants";
 import { useNotification, useSubscription } from "@/context";
 import { useAuth } from "@/hooks";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,6 +25,7 @@ const styles = StyleSheet.create({
 });
 
 export default function BetaAccessScreen() {
+  const router = useRouter();
   const {
     signInWithEmail,
     signUpWithEmail,
@@ -66,8 +68,25 @@ export default function BetaAccessScreen() {
       console.log("Setting up beta access...");
       await createSubscription();
       await refreshSubscription();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to setup beta access:", error);
+
+      // Force redirect to sign-in page on 401 error
+      if (error?.response?.status === 401) {
+        showNotification(
+          "Authentication error. Redirecting to sign-in...",
+          "error"
+        );
+        router.replace("/auth/sign-in");
+        return;
+      }
+
+      // Navigate back to landing page on other errors
+      setCurrentStep("landing");
+      showNotification(
+        "Error setting up beta access. Please try again.",
+        "error"
+      );
     }
   };
 
@@ -81,32 +100,22 @@ export default function BetaAccessScreen() {
     setCurrentStep("auth");
   };
 
-  const handleAuth = async (
-    email: string,
-    password: string,
-    mode: AuthMode
-  ) => {
-    if (!email || !password) {
-      showNotification(
-        "Por favor ingresa tanto el correo electrónico como la contraseña",
-        "error"
-      );
+  const handleAuth = async (email: string, name: string, mode: AuthMode) => {
+    if (!email) {
+      showNotification("Por favor ingresa tu correo electrónico", "error");
       return;
     }
 
-    if (mode === "signup" && password.length < 6) {
-      showNotification(
-        "La contraseña debe tener al menos 6 caracteres",
-        "error"
-      );
+    if ((mode === "signup" && !name) || name.trim().length < 2) {
+      showNotification("Por favor ingresa tu nombre completo", "error");
       return;
     }
 
     try {
       if (mode === "signup") {
-        await signUpWithEmail(email, password);
+        await signUpWithEmail(email, name);
       } else {
-        await signInWithEmail(email, password);
+        await signInWithEmail(email);
       }
       // Beta access will be set up automatically in the useEffect
     } catch (error: any) {

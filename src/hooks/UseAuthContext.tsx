@@ -26,8 +26,8 @@ export type AuthData = {
   profile?: any | null;
   isLoading: boolean;
   isLoggedIn: boolean;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string) => Promise<void>;
+  signUpWithEmail: (email: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshSubscription: () => Promise<void>;

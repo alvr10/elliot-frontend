@@ -1,7 +1,7 @@
 import { AuthContext } from "@/hooks";
 import { supabase } from "@/lib/supabase";
-import { apiClient } from "@/services/api";
 import { STORAGE_KEYS } from "@/services/api/config";
+import { subscriptionApi } from "@/services/api/v1/subscription.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session } from "@supabase/supabase-js";
 import { PropsWithChildren, useEffect, useState } from "react";
@@ -30,6 +30,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [session, setSession] = useState<Session | undefined | null>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [subscriptionError, setSubscriptionError] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -41,7 +42,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
           id: session.user.id,
           email: session.user.email!,
         });
-        fetchSubscriptionStatus(session.access_token);
+        fetchSubscriptionStatus();
       } else {
         setLoading(false); // No user, done loading
       }
@@ -77,7 +78,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
           email: session.user.email!,
         });
         // Fetch subscription status for signed in user
-        await fetchSubscriptionStatus(session.access_token);
+        await fetchSubscriptionStatus();
       } else if (event === "SIGNED_OUT") {
         // Clear stored tokens
         await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
@@ -86,11 +87,13 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         setSubscription(null);
         setSession(null);
         setProfile(null);
+        setSubscriptionError(false);
         setLoading(false);
       }
     });
 
     return () => authSubscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch the profile when the session changes
@@ -160,45 +163,48 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmail = async (email: string) => {
     try {
-      console.log("Signing in with email:", email);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      console.log("Requesting magic link for:", email);
+      // Use Supabase directly for magic link
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
       });
 
       if (error) throw error;
 
-      console.log("Sign in successful:", data.user?.email);
-      // Don't set loading to false here - let the auth state change handle it
+      Alert.alert(
+        "Check your email",
+        "We sent you a magic link. Please check your email and click the link to sign in."
+      );
     } catch (error: any) {
-      console.error("Error signing in:", error);
-      throw new Error(error.message || "Failed to sign in");
+      console.error("Error requesting magic link:", error);
+      throw new Error(error.message || "Failed to send magic link");
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, name: string) => {
     try {
-      console.log("Signing up with email:", email);
-      const { data, error } = await supabase.auth.signUp({
+      console.log("Registering with email:", email);
+      // Use Supabase directly for magic link
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
+        options: {
+          data: {
+            name: name,
+          },
+        },
       });
 
       if (error) throw error;
 
-      console.log("Sign up successful:", data.user?.email);
-
-      if (data.user && !data.user.email_confirmed_at) {
-        Alert.alert(
-          "Check your email",
-          "We sent you a confirmation link. Please check your email and click the link to verify your account."
-        );
-      }
+      Alert.alert(
+        "Check your email",
+        "We sent you a magic link. Please check your email and click the link to verify your account."
+      );
     } catch (error: any) {
-      console.error("Error signing up:", error);
-      throw new Error(error.message || "Failed to sign up");
+      console.error("Error registering:", error);
+      throw new Error(error.message || "Failed to register");
     }
   };
 
@@ -223,19 +229,44 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const fetchSubscriptionStatus = async (token: string) => {
+  const fetchSubscriptionStatus = async () => {
+    // Don't fetch if we already had an error
+    if (subscriptionError) {
+      console.log("Skipping subscription fetch due to previous error");
+      setSubscriptionLoading(false);
+      setLoading(false);
+      return;
+    }
+
     setSubscriptionLoading(true);
     try {
       console.log("Fetching subscription status...");
-      const response = await apiClient.get("/subscription/status");
+      const response = await subscriptionApi.getSubscriptionStatus();
 
-      console.log("Subscription status response:", response.status);
+      console.log("Subscription status response:", response);
 
-      // Set subscription data regardless of status
-      setSubscription(response.data);
-    } catch (error) {
+      // Set subscription data regardless of status - convert status to match interface
+      setSubscription({
+        status: response.status as any,
+        expires_at: response.endDate,
+      });
+      setSubscriptionError(false);
+    } catch (error: any) {
       console.error("Failed to fetch subscription status:", error);
-      setSubscription({ status: "inactive" });
+      setSubscriptionError(true); // Set error flag to prevent retries
+
+      // Stop retrying on authentication errors
+      if (error?.response?.status === 401 || error?.response?.status === 404) {
+        console.log("Stopping subscription status fetch due to auth/error");
+        setSubscription({ status: "inactive", expires_at: undefined });
+        // Clear tokens on auth error
+        if (error?.response?.status === 401) {
+          await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+          await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        }
+      } else {
+        setSubscription({ status: "inactive", expires_at: undefined });
+      }
     } finally {
       setSubscriptionLoading(false);
       setLoading(false); // Clear main loading after subscription check
@@ -252,10 +283,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const refreshSubscription = async () => {
-    const token = await getCurrentToken();
-    if (token) {
-      await fetchSubscriptionStatus(token);
-    }
+    await fetchSubscriptionStatus();
   };
 
   return (
