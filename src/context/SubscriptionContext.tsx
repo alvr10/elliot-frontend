@@ -1,7 +1,7 @@
 import { subscriptionApi } from "@/services/api";
 import React, { createContext, useContext } from "react";
 import { Alert } from "react-native";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../hooks/UseAuthContext";
 
 interface SubscriptionContextType {
   createSubscription: () => Promise<boolean>;
@@ -28,43 +28,31 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
         return false;
       }
 
-      console.log("Creating subscription for user:", user.email);
+      console.log("Creating beta subscription for user:", user.email);
 
-      const isBeta = process.env.EXPO_PUBLIC_BETA_MODE === "true";
+      // For beta, just create subscription without payment
+      await subscriptionApi.createSubscription({ planId: "beta" });
+      await refreshSubscription();
 
-      if (isBeta) {
-        // For beta, just create subscription without payment
-        await subscriptionApi.createSubscription({ planId: "beta" });
-        await refreshSubscription();
+      Alert.alert("Success!", "Beta access granted. Welcome to CaffTracker!", [
+        {
+          text: "Continue",
+          onPress: () => {
+            // Force a refresh of app state
+          },
+        },
+      ]);
 
-        Alert.alert(
-          "Success!",
-          "Beta access granted. Welcome to CaffTracker!",
-          [
-            {
-              text: "Continue",
-              onPress: () => {
-                // Force a refresh of the app state
-              },
-            },
-          ]
-        );
-
-        return true;
-      } else {
-        // TODO: Implement paid subscription with RevenueCat
-        Alert.alert("Error", "Paid subscriptions not yet implemented");
-        return false;
-      }
+      return true;
     } catch (error) {
-      console.error("Subscription creation failed:", error);
+      console.error("Beta subscription creation failed:", error);
 
       let errorMessage = "Please try again.";
       if (error instanceof Error) {
         errorMessage = error.message;
       }
 
-      Alert.alert("Subscription Failed", errorMessage);
+      Alert.alert("Beta Access Failed", errorMessage);
       return false;
     } finally {
       setLoading(false);

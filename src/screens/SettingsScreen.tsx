@@ -1,6 +1,6 @@
 import Card from "@/components/Card";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppTheme, Spacing, Typography } from "../constants";
-import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+import { useAuth } from "../hooks/UseAuthContext";
 
 const styles = StyleSheet.create({
   container: {
@@ -71,64 +71,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     padding: Spacing.md,
   },
-  subscriptionCard: {
-    backgroundColor: AppTheme.background,
-    borderRadius: 16,
-    marginBottom: Spacing.md,
-  },
-  subscriptionContent: {
-    padding: Spacing.md,
-  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.sm,
-  },
-  warningCard: {
-    backgroundColor: AppTheme.backgroundSecondary,
-    padding: Spacing.md,
-    borderRadius: 8,
-    marginBottom: Spacing.md,
-  },
-  warningText: {
-    color: AppTheme.text.primary,
-    textAlign: "center",
-    fontSize: Typography.size.sm,
-  },
-  cancelButton: {
-    borderWidth: 1,
-    borderColor: AppTheme.error,
-    padding: Spacing.md,
-    borderRadius: 8,
-  },
-  cancelButtonActive: {
-    backgroundColor: AppTheme.error,
-  },
-  cancelButtonDisabled: {
-    backgroundColor: AppTheme.text.disabled,
-  },
-  cancelText: {
-    color: AppTheme.error,
-    textAlign: "center",
-    fontWeight: Typography.weight.medium,
-  },
-  reactivateButton: {
-    borderWidth: 1,
-    borderColor: AppTheme.success,
-    padding: Spacing.md,
-    borderRadius: 8,
-  },
-  reactivateButtonActive: {
-    backgroundColor: AppTheme.success,
-  },
-  reactivateButtonDisabled: {
-    backgroundColor: AppTheme.text.disabled,
-  },
-  reactivateText: {
-    color: AppTheme.success,
-    textAlign: "center",
-    fontWeight: Typography.weight.medium,
   },
   legalText: {
     color: AppTheme.text.primary,
@@ -143,14 +90,6 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     resizeMode: "contain",
-  },
-  lightLabel: {
-    color: AppTheme.text.secondary,
-    fontSize: Typography.size.sm,
-  },
-  lightValue: {
-    color: AppTheme.text.primary,
-    fontSize: Typography.size.base,
   },
   legalRow: {
     flexDirection: "row",
@@ -169,12 +108,9 @@ const styles = StyleSheet.create({
 });
 
 export default function SettingsScreen() {
-  const [cancelling, setCancelling] = useState(false);
-  const [reactivating, setReactivating] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const navigation = useNavigation();
-  const { subscription, signOut, getCurrentToken, refreshSubscription } =
-    useAuth();
+  const router = useRouter();
+  const { subscription, signOut } = useAuth();
   const { showNotification } = useNotification();
 
   const handleSignOut = () => {
@@ -213,150 +149,29 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleCancelSubscription = () => {
-    Alert.alert(
-      "Cancel Subscription",
-      "Your subscription will be cancelled at the end of your current billing period. You'll keep access until then and won't be charged again.",
-      [
-        { text: "Keep Subscription", style: "cancel" },
-        {
-          text: "Cancel at Period End",
-          style: "destructive",
-          onPress: cancelSubscription,
-        },
-      ]
-    );
-  };
-
-  const handleReactivateSubscription = () => {
-    Alert.alert(
-      "Reactivate Subscription",
-      "This will resume your subscription and you'll be charged at the next billing cycle.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reactivate",
-          onPress: reactivateSubscription,
-        },
-      ]
-    );
-  };
-
-  const cancelSubscription = async () => {
-    setCancelling(true);
-    try {
-      const token = await getCurrentToken();
-      if (!token) {
-        showNotification("Please sign in again", "error");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/subscription/cancel`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        await refreshSubscription(); // Refresh to get new status
-        showNotification(
-          "Subscription cancelled - access until period end",
-          "success"
-        );
-      } else {
-        const errorData = await response.json();
-        showNotification(
-          errorData.error || "Failed to cancel subscription",
-          "error"
-        );
-      }
-    } catch (error) {
-      console.error("Failed to cancel subscription:", error);
-      showNotification("Failed to cancel subscription", "error");
-    } finally {
-      setCancelling(false);
-    }
-  };
-
-  const reactivateSubscription = async () => {
-    setReactivating(true);
-    try {
-      const token = await getCurrentToken();
-      if (!token) {
-        showNotification("Please sign in again", "error");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/subscription/reactivate`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        await refreshSubscription(); // Refresh to get new status
-        showNotification("Subscription reactivated successfully", "success");
-      } else {
-        const errorData = await response.json();
-        showNotification(
-          errorData.error || "Failed to reactivate subscription",
-          "error"
-        );
-      }
-    } catch (error) {
-      console.error("Failed to reactivate subscription:", error);
-      showNotification("Failed to reactivate subscription", "error");
-    } finally {
-      setReactivating(false);
-    }
-  };
-
   const openLink = (url: string) => {
     Linking.openURL(url).catch(() => {
       showNotification("Could not open link", "error");
     });
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Unknown";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch {
-      return "Invalid date";
-    }
-  };
-
   const getSubscriptionStatusDisplay = () => {
     switch (subscription?.status) {
       case "active":
-        return { text: "Active", color: AppTheme.success };
+        return { text: "Beta Access Active", color: AppTheme.success };
       case "active_until_period_end":
         return {
-          text: "Cancelled (Active until period end)",
+          text: "Beta Access Active",
           color: AppTheme.warning,
         };
       case "cancelled":
-        return { text: "Cancelled", color: AppTheme.error };
+        return { text: "Beta Access Ended", color: AppTheme.error };
       default:
-        return { text: "Inactive", color: AppTheme.text.disabled };
+        return { text: "No Beta Access", color: AppTheme.text.disabled };
     }
   };
 
   const subscriptionStatus = getSubscriptionStatusDisplay();
-  const isCancelledButActive =
-    subscription?.status === "active_until_period_end";
 
   return (
     <View style={styles.container}>
@@ -368,7 +183,7 @@ export default function SettingsScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => router.back()}
             style={styles.closeButton}
           >
             <Text style={styles.closeText}>×</Text>
@@ -413,9 +228,7 @@ export default function SettingsScreen() {
               icon="edit"
               title="Modificar ingesta diaria"
               element={
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("DailyLimit" as never)}
-                >
+                <TouchableOpacity onPress={() => router.push("/daily-limit")}>
                   <MaterialIcons
                     name="chevron-right"
                     size={24}

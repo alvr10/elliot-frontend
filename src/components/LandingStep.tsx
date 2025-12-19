@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -85,19 +84,6 @@ const LandingStep: React.FC<LandingStepProps> = ({
             <Button variant="outline" onPress={onAlreadyHaveAccount}>
               Ya Tengo una Cuenta
             </Button>
-
-            {__DEV__ && (
-              <Button
-                variant="error"
-                onPress={async () => {
-                  await AsyncStorage.removeItem("hasSeenOnboarding");
-                  // TODO: Replace with toast
-                  alert("Debug: Onboarding reset! Restart the app.");
-                }}
-              >
-                DEBUG: reset onboarding
-              </Button>
-            )}
 
             <Text style={styles.footerText}>
               Cancela en cualquier momento. Tu salud lo vale.

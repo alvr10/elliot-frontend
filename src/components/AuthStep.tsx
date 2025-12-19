@@ -1,5 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -35,9 +35,103 @@ const AuthStep: React.FC<AuthStepProps> = ({
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Password validation function
+  const validatePassword = (
+    password: string
+  ): { isValid: boolean; message: string } => {
+    if (password.length < 6) {
+      return {
+        isValid: false,
+        message: "La contraseña debe tener al menos 6 caracteres",
+      };
+    }
+
+    // Check for at least one number
+    if (!/\d/.test(password)) {
+      return {
+        isValid: false,
+        message: "La contraseña debe incluir al menos un número",
+      };
+    }
+
+    // Check for at least one letter
+    if (!/[a-zA-Z]/.test(password)) {
+      return {
+        isValid: false,
+        message: "La contraseña debe incluir al menos una letra",
+      };
+    }
+
+    return { isValid: true, message: "" };
+  };
+
+  // Validate form on input change
+  useEffect(() => {
+    if (email) {
+      if (!validateEmail(email)) {
+        setEmailError("Por favor ingresa un correo electrónico válido");
+      } else {
+        setEmailError("");
+      }
+    }
+  }, [email]);
+
+  useEffect(() => {
+    if (password) {
+      const validation = validatePassword(password);
+      setPasswordError(validation.message);
+    } else {
+      setPasswordError("");
+    }
+  }, [password]);
 
   const handleAuth = async () => {
-    await onAuth(email, password, authMode);
+    // Reset errors
+    setEmailError("");
+    setPasswordError("");
+
+    // Validate email
+    if (!email) {
+      setEmailError("El correo electrónico es requerido");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setEmailError("Por favor ingresa un correo electrónico válido");
+      return;
+    }
+
+    // Validate password
+    if (!password) {
+      setPasswordError("La contraseña es requerida");
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.message);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onAuth(email, password, authMode);
+    } catch (error) {
+      console.error("Authentication error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -78,6 +172,9 @@ const AuthStep: React.FC<AuthStepProps> = ({
               style={[styles.googleButton, { marginBottom: Spacing.lg }]}
               onPress={onGoogleAuth}
               activeOpacity={0.8}
+              disabled={isSubmitting}
+              accessibilityLabel="Continuar con Google"
+              accessibilityRole="button"
             >
               <FontAwesome name="google" size={24} color={AppTheme.primary} />
               <Text style={styles.googleButtonText}>Continuar con Google</Text>
@@ -89,39 +186,82 @@ const AuthStep: React.FC<AuthStepProps> = ({
               <View style={styles.dividerLine} />
             </View>
 
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Dirección de correo electrónico"
-              placeholderTextColor="#6B7280"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.textInput}
-            />
+            <View>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Dirección de correo electrónico"
+                placeholderTextColor="#6B7280"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={[
+                  styles.textInput,
+                  emailError ? styles.inputError : null,
+                  isSubmitting ? styles.inputDisabled : null,
+                ]}
+                editable={!isSubmitting}
+                accessibilityLabel="Correo electrónico"
+                accessibilityHint="Ingresa tu dirección de correo electrónico"
+              />
+              {emailError ? (
+                <Text style={styles.errorText}>{emailError}</Text>
+              ) : null}
+            </View>
 
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder={
-                authMode === "signup"
-                  ? "Contraseña (mín 6 caracteres)"
-                  : "Contraseña"
-              }
-              placeholderTextColor="#6B7280"
-              secureTextEntry
-              style={[styles.textInput, styles.passwordInput]}
-            />
+            <View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={
+                    authMode === "signup"
+                      ? "Contraseña (mín 6 caracteres, 1 número, 1 letra)"
+                      : "Contraseña"
+                  }
+                  placeholderTextColor="#6B7280"
+                  secureTextEntry={!showPassword}
+                  style={[
+                    styles.textInput,
+                    styles.passwordInputField,
+                    passwordError ? styles.inputError : null,
+                    isSubmitting ? styles.inputDisabled : null,
+                  ]}
+                  editable={!isSubmitting}
+                  accessibilityLabel="Contraseña"
+                  accessibilityHint="Ingresa tu contraseña"
+                />
+                <TouchableOpacity
+                  style={styles.passwordToggle}
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={isSubmitting}
+                  accessibilityLabel={
+                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                  accessibilityRole="button"
+                >
+                  <FontAwesome
+                    name={showPassword ? "eye-slash" : "eye"}
+                    size={20}
+                    color={AppTheme.text.secondary}
+                  />
+                </TouchableOpacity>
+              </View>
+              {passwordError ? (
+                <Text style={styles.errorText}>{passwordError}</Text>
+              ) : null}
+            </View>
 
             <Button
               variant="primary"
               onPress={handleAuth}
-              loading={loading}
+              loading={loading || isSubmitting}
               loadingText={
                 authMode === "signup"
                   ? "Creando Cuenta..."
                   : "Iniciando Sesión..."
               }
+              disabled={!!emailError || !!passwordError || !email || !password}
             >
               {authMode === "signup" ? "Crear Cuenta" : "Iniciar Sesión"}
             </Button>
@@ -130,6 +270,13 @@ const AuthStep: React.FC<AuthStepProps> = ({
               onPress={() =>
                 setAuthMode(authMode === "signup" ? "signin" : "signup")
               }
+              disabled={isSubmitting}
+              accessibilityLabel={
+                authMode === "signup"
+                  ? "Cambiar a inicio de sesión"
+                  : "Cambiar a registro"
+              }
+              accessibilityRole="button"
             >
               <Text style={styles.switchAuthText}>
                 {authMode === "signup"
@@ -191,13 +338,37 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     marginTop: Spacing.md,
     borderRadius: 8,
-    marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: AppTheme.border,
     fontSize: Typography.size.lg,
   },
-  passwordInput: {
-    marginBottom: Spacing["2xl"],
+  inputError: {
+    borderColor: "#EF4444", // red-500
+  },
+  inputDisabled: {
+    opacity: 0.5,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  passwordInputField: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  passwordToggle: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    position: "absolute",
+    right: 0,
+  },
+  errorText: {
+    color: "#EF4444", // red-500
+    fontSize: Typography.size.sm,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
   },
   switchAuthText: {
     paddingTop: Spacing.md,

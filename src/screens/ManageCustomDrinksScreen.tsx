@@ -1,5 +1,6 @@
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -10,8 +11,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+import { useAuth } from "../hooks/UseAuthContext";
 
 interface CustomDrink {
   id: number;
@@ -28,7 +29,7 @@ export default function ManageCustomDrinksScreen() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
 
-  const navigation = useNavigation();
+  const router = useRouter();
   const { getCurrentToken } = useAuth();
   const { showNotification } = useNotification();
 
@@ -140,13 +141,11 @@ export default function ManageCustomDrinksScreen() {
     <SafeAreaView className="flex-1 bg-black">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-white text-lg">← Back</Text>
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold">My Custom Drinks</Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("CustomDrink" as never)}
-        >
+        <TouchableOpacity onPress={() => router.push("/custom-drink")}>
           <Text className="text-white text-lg font-semibold">+ Add</Text>
         </TouchableOpacity>
       </View>
@@ -166,7 +165,7 @@ export default function ManageCustomDrinksScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate("CustomDrink" as never)}
+            onPress={() => router.push("/custom-drink")}
             className="bg-white py-4 px-8 rounded-lg"
           >
             <Text className="text-black text-lg font-bold">
@@ -251,7 +250,7 @@ export default function ManageCustomDrinksScreen() {
           {/* Add Another Button */}
           <View className="px-6 pb-8">
             <TouchableOpacity
-              onPress={() => navigation.navigate("CustomDrink" as never)}
+              onPress={() => router.push("/custom-drink")}
               className="bg-gray-800 border border-gray-600 py-4 rounded-lg"
             >
               <Text className="text-white text-center font-medium">

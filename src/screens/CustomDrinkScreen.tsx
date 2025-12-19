@@ -1,5 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -11,8 +11,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+import { useAuth } from "../hooks/UseAuthContext";
 
 const categories = [
   { value: "coffee", label: "Coffee" },
@@ -30,7 +30,7 @@ export default function CustomDrinkScreen() {
   const [servingSize, setServingSize] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigation = useNavigation();
+  const router = useRouter();
   const { getCurrentToken } = useAuth();
   const { showNotification } = useNotification();
 
@@ -104,7 +104,7 @@ export default function CustomDrinkScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         // Navigate back first, then show notification
-        navigation.goBack();
+        router.back();
 
         setTimeout(() => {
           showNotification(`${name} added to your drinks!`, "success");
@@ -136,7 +136,7 @@ export default function CustomDrinkScreen() {
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => router.back()}>
             <Text className="text-white text-lg">Cancel</Text>
           </TouchableOpacity>
           <Text className="text-white text-xl font-bold">

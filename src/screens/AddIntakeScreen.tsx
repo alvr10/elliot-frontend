@@ -1,5 +1,6 @@
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,8 +12,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+import { useAuth } from "../hooks/UseAuthContext";
 
 interface Drink {
   id: number;
@@ -33,7 +34,7 @@ export default function AddIntakeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [fetchingDrinks, setFetchingDrinks] = useState(true);
 
-  const navigation = useNavigation();
+  const router = useRouter();
   const { user, getCurrentToken } = useAuth();
   const { showNotification } = useNotification();
 
@@ -182,7 +183,7 @@ export default function AddIntakeScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         // Navigate back first, then show notification
-        navigation.goBack();
+        router.back();
 
         // Use setTimeout to ensure navigation completes before showing notification
         setTimeout(() => {
@@ -237,7 +238,7 @@ export default function AddIntakeScreen() {
     <SafeAreaView className="flex-1 bg-black">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-white text-lg">Cancel</Text>
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold">Log Intake</Text>
@@ -263,7 +264,7 @@ export default function AddIntakeScreen() {
             className="bg-gray-900 text-white px-4 py-3 rounded-lg border border-gray-700 flex-1"
           />
           <TouchableOpacity
-            onPress={() => navigation.navigate("CustomDrink" as never)}
+            onPress={() => router.push("/custom-drink")}
             className="bg-white px-4 py-3 rounded-lg justify-center"
           >
             <Text className="text-black font-semibold">+ Custom</Text>
@@ -333,7 +334,7 @@ export default function AddIntakeScreen() {
                 No drinks found matching your search
               </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate("CustomDrink" as never)}
+                onPress={() => router.push("/custom-drink")}
                 className="bg-white py-3 px-6 rounded-lg mx-8"
               >
                 <Text className="text-black font-semibold text-center">

@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -14,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CircularProgress from "../components/CircularProgress";
 import IntakeLogItem from "../components/IntakeLogItem";
 import { AppTheme, Colors, Spacing, Typography } from "../constants";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/UseAuthContext";
 import { caffeineApi } from "../services/api";
 
 interface IntakeLog {
@@ -40,7 +41,7 @@ export default function HomeScreen() {
   const [dailyLimit, setDailyLimit] = useState(400); // USER'S CUSTOM LIMIT
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
+  const router = useRouter();
   const { user } = useAuth();
 
   // Fetch data when screen comes into focus (after adding intake)
@@ -146,7 +147,7 @@ export default function HomeScreen() {
               Hola, {user?.email ? user.email.split("@")[0] : "Usuario"}
             </Text>
             <TouchableOpacity
-              onPress={() => (navigation as any).navigate("Settings")}
+              onPress={() => router.push("/(tabs)/settings")}
               style={styles.profileButton}
             >
               <Image
@@ -261,9 +262,7 @@ export default function HomeScreen() {
 
       {/* Tabbar */}
       <View style={styles.tabbar}>
-        <TouchableOpacity
-          onPress={() => (navigation as any).navigate("History")}
-        >
+        <TouchableOpacity onPress={() => router.push("/(tabs)/history")}>
           <MaterialIcons
             name="bar-chart"
             size={32}
@@ -271,7 +270,7 @@ export default function HomeScreen() {
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => (navigation as any).navigate("AddIntake")}
+          onPress={() => router.push("/(tabs)/add-intake")}
           style={[styles.addButton]}
         >
           <MaterialIcons
@@ -280,9 +279,7 @@ export default function HomeScreen() {
             color={AppTheme.secondary}
           />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => (navigation as any).navigate("Settings")}
-        >
+        <TouchableOpacity onPress={() => router.push("/(tabs)/settings")}>
           <MaterialIcons name="person" size={32} color={AppTheme.secondary} />
         </TouchableOpacity>
       </View>

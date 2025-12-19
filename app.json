@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFF0D1"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.cafftracker"
@@ -34,7 +36,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#FFF0D1"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

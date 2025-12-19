@@ -1,5 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+import { useAuth } from "../hooks/UseAuthContext";
 
 const presetLimits = [
   { value: 200, label: "Low (200mg)", description: "1-2 cups of coffee" },
@@ -32,7 +32,7 @@ export default function DailyLimitScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const navigation = useNavigation();
+  const router = useRouter();
   const { getCurrentToken } = useAuth();
   const { showNotification } = useNotification();
 
@@ -102,7 +102,7 @@ export default function DailyLimitScreen() {
       if (response.ok) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         showNotification(`Daily limit set to ${finalLimit}mg`, "success");
-        navigation.goBack();
+        router.back();
       } else {
         const errorData = await response.json();
         showNotification(errorData.error || "Failed to save limit", "error");
@@ -128,7 +128,7 @@ export default function DailyLimitScreen() {
     <SafeAreaView className="flex-1 bg-black">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-800">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Text className="text-white text-lg">← Back</Text>
         </TouchableOpacity>
         <Text className="text-white text-xl font-bold">Daily Limit</Text>
