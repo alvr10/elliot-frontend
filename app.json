@@ -1,29 +1,30 @@
 {
   "expo": {
     "name": "Elliot - Caffeine tracker",
-    "slug": "cafftracker",
+    "slug": "elliot-caffeine-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "dark",
-    "scheme": "cafftracker",
+    "scheme": "exp",
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#FFF0D1"
+      "backgroundColor": "#795757"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.cafftracker"
+      "bundleIdentifier": "com.yourcompany.elliotcaffeine"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#FFF0D1"
+        "backgroundColor": "#795757"
       },
-      "package": "com.yourcompany.cafftracker",
-      "edgeToEdgeEnabled": true
+      "package": "com.yourcompany.elliotcaffeine",
+      "edgeToEdgeEnabled": true,
+      "permissions": []
     },
     "plugins": [
       [
@@ -32,15 +33,17 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FFF0D1"
+          "backgroundColor": "#795757"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
     "extra": {
       "eas": {
-        "projectId": "a0afabda-ea43-4bb0-8afe-97e03509105f"
+        "projectId": "735cc0d8-4d93-4359-bb24-f031a3404032"
       }
-    }
+    },
+    "owner": "alvr10"
   }
 }

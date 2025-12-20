@@ -1,9 +1,7 @@
 import { Button, FeatureList } from "@/components";
 import { AppTheme, Spacing, Typography } from "@/constants";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -30,32 +28,6 @@ const LandingStep: React.FC<LandingStepProps> = ({
   onStartJourney,
   onAlreadyHaveAccount,
 }) => {
-  const isDev = __DEV__;
-
-  const clearAllStorage = async () => {
-    Alert.alert(
-      "Clear All Storage (Dev Only)",
-      "This will clear all stored data including auth tokens. Are you sure?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear All",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.clear();
-              Alert.alert(
-                "Success",
-                "All storage cleared. Please restart the app."
-              );
-            } catch {
-              Alert.alert("Error", "Failed to clear storage");
-            }
-          },
-        },
-      ]
-    );
-  };
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -109,16 +81,6 @@ const LandingStep: React.FC<LandingStepProps> = ({
             <Button variant="outline" onPress={onAlreadyHaveAccount}>
               Ya Tengo una Cuenta
             </Button>
-
-            {isDev && (
-              <Button
-                variant="outline"
-                onPress={clearAllStorage}
-                style={styles.devButton}
-              >
-                🧹 Clear All Storage (Dev)
-              </Button>
-            )}
 
             <Text style={styles.footerText}>
               Cancela en cualquier momento. Tu salud lo vale.
@@ -220,10 +182,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xl,
     gap: Spacing.sm,
-  },
-  devButton: {
-    borderColor: AppTheme.error,
-    borderWidth: 1,
   },
   footerText: {
     color: AppTheme.text.disabled,

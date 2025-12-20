@@ -1,6 +1,5 @@
 import { Button, ProgressBar } from "@/components";
 import { AppTheme, Spacing, Typography } from "@/constants";
-import { FontAwesome } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -133,7 +132,7 @@ const AuthStep: React.FC<AuthStepProps> = ({
               </Text>
             </View>
 
-            <TouchableOpacity
+            {/*<TouchableOpacity
               style={[styles.googleButton, { marginBottom: Spacing.lg }]}
               onPress={onGoogleAuth}
               activeOpacity={0.8}
@@ -143,7 +142,7 @@ const AuthStep: React.FC<AuthStepProps> = ({
             >
               <FontAwesome name="google" size={24} color={AppTheme.primary} />
               <Text style={styles.googleButtonText}>Continuar con Google</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />

@@ -2,7 +2,6 @@ import { Button } from "@/components";
 import { AppTheme, Spacing, Typography } from "@/constants";
 import { useNotification } from "@/context";
 import { useAuth } from "@/hooks";
-import { FontAwesome } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -131,7 +130,7 @@ export default function AuthScreen() {
                   : "Inicia sesión para continuar tu viaje"}
               </Text>
 
-              <TouchableOpacity
+              {/*<TouchableOpacity
                 style={[styles.googleButton, { marginBottom: Spacing.lg }]}
                 onPress={handleGoogleAuth}
                 activeOpacity={0.8}
@@ -143,7 +142,7 @@ export default function AuthScreen() {
                 <Text style={styles.googleButtonText}>
                   Continuar con Google
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity>*/}
 
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />

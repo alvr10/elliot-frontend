@@ -78,7 +78,7 @@ export default function ProfileImageSelector({
             showsVerticalScrollIndicator={false}
           >
             {/* Google Profile Option */}
-            {googleProfileUrl && (
+            {/*{googleProfileUrl && (
               <View style={styles.section}>
                 <Text
                   style={[
@@ -104,7 +104,7 @@ export default function ProfileImageSelector({
                   />
                 </TouchableOpacity>
               </View>
-            )}
+            )}*/}
 
             {/* Default Profile Options */}
             <View style={styles.section}>

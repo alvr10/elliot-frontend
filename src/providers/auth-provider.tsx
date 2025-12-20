@@ -295,6 +295,9 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         provider: "google",
         options: {
           redirectTo: process.env.EXPO_PUBLIC_SUPABASE_REDIRECT_URI,
+          queryParams: {
+            app: "true",
+          },
         },
       });
 
