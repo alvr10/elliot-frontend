@@ -1,14 +1,18 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
-    "jsx": "react-native",
-    "module": "ESNext",
+    "module": "esnext",
     "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "paths": {
-      "@/*": ["./*"]
-    },
-    "types": ["nativewind/types"]
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/screens/*": ["./src/screens/*"],
+      "@/providers/*": ["./src/providers/*"],
+      "@/constants/*": ["./src/constants/*"]
+    }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

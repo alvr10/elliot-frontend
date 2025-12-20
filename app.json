@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Elliot - Caffeine tracker",
+    "slug": "elliot-caffeine-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "exp",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#795757"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.elliotcaffeine"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#795757"
+      },
+      "package": "com.yourcompany.elliotcaffeine",
+      "edgeToEdgeEnabled": true,
+      "permissions": []
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#795757"
+        }
+      ],
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "735cc0d8-4d93-4359-bb24-f031a3404032"
+      }
+    },
+    "owner": "alvr10"
+  }
+}

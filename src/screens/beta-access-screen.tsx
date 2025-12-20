@@ -1,0 +1,223 @@
+import { AuthStep, LandingStep } from "@/components";
+import { Colors, Spacing, Typography } from "@/constants";
+import { useSubscription } from "@/context";
+import { useAuth } from "@/hooks";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+
+type FlowStep = "landing" | "auth";
+type AuthMode = "signin" | "signup";
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: Colors.black,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: Colors.white,
+    fontSize: Typography.size.lg,
+    marginTop: Spacing.lg,
+  },
+});
+
+export default function BetaAccessScreen() {
+  const router = useRouter();
+  const {
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    user,
+    refreshSubscription,
+    subscriptionLoading,
+  } = useAuth();
+  const { createSubscription } = useSubscription();
+
+  const [currentStep, setCurrentStep] = useState<FlowStep>("landing");
+  const [initialAuthMode, setInitialAuthMode] = useState<AuthMode>("signup");
+
+  // Auto-progress based on user state
+  useEffect(() => {
+    // Don't make navigation decisions while subscription is loading
+    if (subscriptionLoading) {
+      console.log("Subscription loading, waiting...");
+      return;
+    }
+
+    if (user) {
+      console.log("User authenticated, setting up beta access");
+      // Auto-create beta subscription for authenticated users
+      setupBetaAccess();
+      return;
+    }
+
+    if (!user && currentStep !== "landing") {
+      console.log("User signed out, going back to landing");
+      // User signed out - go back to landing
+      setCurrentStep("landing");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, subscriptionLoading]);
+
+  const [isSettingUpBeta, setIsSettingUpBeta] = useState(false);
+
+  const setupBetaAccess = async () => {
+    // Prevent multiple simultaneous setup attempts
+    if (isSettingUpBeta) {
+      console.log("Beta access setup already in progress, skipping...");
+      return;
+    }
+
+    setIsSettingUpBeta(true);
+    try {
+      console.log("Setting up beta access...");
+      const success = await createSubscription();
+
+      if (!success) {
+        // createSubscription returns false for 401 errors without throwing
+        console.log("Subscription creation failed, checking user state...");
+        return;
+      }
+
+      console.log("Subscription created, now refreshing...");
+      await refreshSubscription();
+      console.log("Subscription refresh completed");
+    } catch (error: any) {
+      console.error("Failed to setup beta access:", error);
+
+      // Force redirect to sign-in page on 401 error
+      if (error?.response?.status === 401) {
+        Toast.show({
+          type: "error",
+          text1: "Error de autenticación. Redirigiendo a iniciar sesión...",
+          position: "top",
+          visibilityTime: 3000,
+        });
+        router.replace("/auth/sign-in");
+        return;
+      }
+
+      // Navigate back to landing page on other errors
+      setCurrentStep("landing");
+      Toast.show({
+        type: "error",
+        text1: "Error al configurar acceso beta. Por favor intenta de nuevo.",
+        position: "top",
+        visibilityTime: 3000,
+      });
+    } finally {
+      setIsSettingUpBeta(false);
+    }
+  };
+
+  const handleStartJourney = () => {
+    setInitialAuthMode("signup");
+    setCurrentStep("auth");
+  };
+
+  const handleAlreadyHaveAccount = () => {
+    setInitialAuthMode("signin");
+    setCurrentStep("auth");
+  };
+
+  const handleAuth = async (email: string, name: string, mode: AuthMode) => {
+    console.log("BetaAccessScreen handleAuth called with:", {
+      email,
+      name,
+      mode,
+    });
+
+    if (!email) {
+      console.log("Email validation failed in BetaAccessScreen");
+      Toast.show({
+        type: "error",
+        text1: "Por favor ingresa tu correo electrónico",
+        position: "top",
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    // Only validate name for signup mode
+    if (mode === "signup" && (!name || name.trim().length < 2)) {
+      console.log("Name validation failed in BetaAccessScreen");
+      Toast.show({
+        type: "error",
+        text1: "Por favor ingresa tu nombre completo",
+        position: "top",
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    try {
+      console.log("Calling auth function for mode:", mode);
+      if (mode === "signup") {
+        await signUpWithEmail(email, name);
+      } else {
+        await signInWithEmail(email);
+      }
+      console.log("Auth function completed successfully in BetaAccessScreen");
+      // Beta access will be set up automatically in the useEffect
+    } catch (error: any) {
+      console.log("Auth error in BetaAccessScreen:", error);
+      Toast.show({
+        type: "error",
+        text1: error.message,
+        position: "top",
+        visibilityTime: 3000,
+      });
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      await signInWithGoogle();
+      // Beta access will be set up automatically in the useEffect
+    } catch (error: any) {
+      console.log("Google auth error:", error);
+      Toast.show({
+        type: "error",
+        text1: error.message || "Error al iniciar sesión con Google",
+        position: "top",
+        visibilityTime: 3000,
+      });
+    }
+  };
+
+  // Show loading if subscription status is being fetched for signed-in user
+  if (user && subscriptionLoading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={styles.loadingText}>Configurando acceso beta...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  switch (currentStep) {
+    case "landing":
+      return (
+        <LandingStep
+          onStartJourney={handleStartJourney}
+          onAlreadyHaveAccount={handleAlreadyHaveAccount}
+        />
+      );
+    case "auth":
+      return (
+        <AuthStep
+          onBack={() => setCurrentStep("landing")}
+          onAuth={handleAuth}
+          onGoogleAuth={handleGoogleAuth}
+          loading={false} // AuthStep manages its own loading state
+          initialMode={initialAuthMode}
+        />
+      );
+    default:
+      return null;
+  }
+}

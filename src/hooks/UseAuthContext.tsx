@@ -1,0 +1,59 @@
+import { Session } from "@supabase/supabase-js";
+import { createContext, useContext } from "react";
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  profileImageUrl?: string;
+}
+
+interface Subscription {
+  status:
+    | "active"
+    | "inactive"
+    | "cancelled"
+    | "past_due"
+    | "trialing"
+    | "active_until_period_end";
+  expires_at?: string;
+}
+
+export type AuthData = {
+  user: User | null;
+  subscription: Subscription | null;
+  loading: boolean;
+  subscriptionLoading: boolean;
+  session?: Session | null;
+  profile?: any | null;
+  isLoading: boolean;
+  isLoggedIn: boolean;
+  signInWithEmail: (email: string) => Promise<void>;
+  signUpWithEmail: (email: string, name: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
+  getCurrentToken: () => Promise<string | null>;
+  updateProfileImage: (imageUrl: string) => Promise<void>;
+};
+
+export const AuthContext = createContext<AuthData>({
+  user: null,
+  subscription: null,
+  loading: true,
+  subscriptionLoading: false,
+  session: undefined,
+  profile: undefined,
+  isLoading: true,
+  isLoggedIn: false,
+  signInWithEmail: async () => {},
+  signUpWithEmail: async () => {},
+  signOut: async () => {},
+  refreshSubscription: async () => {},
+  getCurrentToken: async () => null,
+  updateProfileImage: async () => {},
+});
+
+export const useAuthContext = () => useContext(AuthContext);
+
+// Export useAuth as an alias for useAuthContext to maintain compatibility
+export const useAuth = useAuthContext;

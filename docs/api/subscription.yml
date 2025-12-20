@@ -1,0 +1,59 @@
+subscription:
+  base_path: "/api/v1/subscription"
+  description: "Subscription management endpoints (RevenueCat integration planned)"
+  authentication: "Bearer token required"
+  guard: "AuthGuard and SubscriptionGuard"
+  endpoints:
+    - path: "/"
+      method: "POST"
+      summary: "Create a new subscription (beta: free, post-beta: RevenueCat)"
+      request_body:
+        required: true
+        schema:
+          type: object
+          required: ["planId"]
+          properties:
+            planId:
+              type: string
+              description: "ID of the subscription plan"
+      responses:
+        201:
+          description: "Subscription activated for beta"
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              userId: { type: string }
+              planId: { type: string }
+              subscriptionType: { type: string }
+        400: "Invalid plan ID or user not found"
+        401: "Unauthorized"
+        403: "Subscription required (when beta ends)"
+    - path: "/cancel"
+      method: "POST"
+      summary: "Cancel user's subscription (not available during beta)"
+      responses:
+        200:
+          description: "Cancellation response"
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              userId: { type: string }
+        401: "Unauthorized"
+    - path: "/status"
+      method: "GET"
+      summary: "Get subscription status"
+      responses:
+        200:
+          description: "Subscription status retrieved successfully"
+          schema:
+            type: object
+            properties:
+              userId: { type: string }
+              status: { type: string, enum: ["active", "inactive"] }
+              type: { type: string, enum: ["beta", "monthly", "yearly"] }
+              startDate: { type: string, format: date-time }
+              endDate: { type: string, format: date-time }
+        401: "Unauthorized"
+        404: "User not found"
