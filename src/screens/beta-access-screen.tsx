@@ -63,10 +63,26 @@ export default function BetaAccessScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, subscriptionLoading]);
 
+  const [isSettingUpBeta, setIsSettingUpBeta] = useState(false);
+
   const setupBetaAccess = async () => {
+    // Prevent multiple simultaneous setup attempts
+    if (isSettingUpBeta) {
+      console.log("Beta access setup already in progress, skipping...");
+      return;
+    }
+
+    setIsSettingUpBeta(true);
     try {
       console.log("Setting up beta access...");
-      await createSubscription();
+      const success = await createSubscription();
+
+      if (!success) {
+        // createSubscription returns false for 401 errors without throwing
+        console.log("Subscription creation failed, checking user state...");
+        return;
+      }
+
       console.log("Subscription created, now refreshing...");
       await refreshSubscription();
       console.log("Subscription refresh completed");
@@ -89,6 +105,8 @@ export default function BetaAccessScreen() {
         "Error setting up beta access. Please try again.",
         "error"
       );
+    } finally {
+      setIsSettingUpBeta(false);
     }
   };
 

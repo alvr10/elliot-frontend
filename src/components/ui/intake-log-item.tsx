@@ -25,10 +25,23 @@ export default function IntakeLogItem({ log }: IntakeLogItemProps) {
   const safeServings = Number(log.servings) || 0;
   const totalCaffeine = Number(log.caffeineMg) || 0;
 
+  const getDrinkImage = (category: string) => {
+    switch (category?.toLowerCase()) {
+      case "café":
+        return require("../../../assets/images/drinks/coffee-image.png");
+      case "té":
+        return require("../../../assets/images/drinks/tea-image.png");
+      case "bebida energética":
+        return require("../../../assets/images/drinks/energy-drink-image.png");
+      default:
+        return require("../../../assets/images/elliot.png");
+    }
+  };
+
   return (
     <View style={styles.drinkItem}>
       <Image
-        source={require("../../../assets/images/elliot.png")}
+        source={getDrinkImage(log.drink?.category || "")}
         style={styles.drinkItemImage}
       />
       <View style={styles.drinkInfo}>

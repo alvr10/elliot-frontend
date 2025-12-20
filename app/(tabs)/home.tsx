@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks";
+import { HomeScreen } from "@/screens";
 import { Redirect } from "expo-router";
 import React from "react";
 
@@ -26,5 +27,5 @@ export default function HomePage() {
   }
 
   // Redirect to history since we removed the home tab
-  return <Redirect href="/(tabs)/history" />;
+  return <HomeScreen />;
 }

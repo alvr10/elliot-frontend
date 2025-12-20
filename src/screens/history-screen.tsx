@@ -1,16 +1,9 @@
 import { AppTheme, Spacing, Typography } from "@/constants";
 import { useAuth } from "@/hooks";
 import { caffeineApi } from "@/services/api";
-import { useRouter } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,14 +11,337 @@ interface DailyTotal {
   [date: string]: number;
 }
 
+export default function HistoryScreen() {
+  const [dailyTotals, setDailyTotals] = useState<DailyTotal>({});
+  const [dailyLimit, setDailyLimit] = useState(400);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchCurrentWeekHistory();
+      fetchDailyLimit();
+    }
+  }, [user]);
+
+  const fetchDailyLimit = async () => {
+    try {
+      const response = await caffeineApi.getDailyLimit();
+      setDailyLimit(response.dailyLimitMg || 400);
+    } catch (error) {
+      console.error("Failed to fetch daily limit:", error);
+    }
+  };
+
+  const fetchCurrentWeekHistory = async () => {
+    try {
+      console.log("Fetching current week history...");
+
+      // Generate current week dates from Monday to Sunday
+      const days = [];
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        const dateString = date.toISOString().split("T")[0];
+        days.push(dateString);
+      }
+
+      // Fetch history for each day of the current week
+      const transformedData: DailyTotal = {};
+
+      for (const date of days) {
+        try {
+          const historyData = await caffeineApi.getIntakeHistory("daily", date);
+
+          let dayTotal = 0;
+          historyData.forEach(item => {
+            dayTotal += item.caffeineMg || 0;
+          });
+
+          transformedData[date] = dayTotal;
+        } catch (error) {
+          console.error(`Failed to fetch history for ${date}:`, error);
+          transformedData[date] = 0;
+        }
+      }
+
+      setDailyTotals(transformedData);
+    } catch (error) {
+      console.error("Failed to fetch current week history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const screenWidth = Dimensions.get("window").width;
+
+  // Generate current week days from Monday to Sunday
+  const currentWeekDays = [];
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    const dateString = date.toISOString().split("T")[0];
+    const dayName = date.toLocaleDateString("es-ES", { weekday: "short" });
+    const formattedDayName = dayName.toUpperCase().replace(".", "");
+    currentWeekDays.push({
+      date: dateString,
+      dayName: formattedDayName,
+      total: dailyTotals[dateString] || 0,
+    });
+  }
+
+  // Prepare chart data with current week data
+  const chartData = {
+    labels: currentWeekDays.map(day => day.dayName),
+    datasets: [
+      {
+        data: currentWeekDays.map(day => Number(day.total) || 0),
+        strokeWidth: 3,
+      },
+    ],
+  };
+
+  const validTotals = currentWeekDays
+    .map(day => day.total)
+    .filter(total => !isNaN(Number(total)) && isFinite(Number(total)));
+
+  const totalDays = validTotals.length;
+  const averageIntake =
+    totalDays > 0
+      ? Math.round(validTotals.reduce((a, b) => a + b, 0) / totalDays)
+      : 0;
+  const daysOverLimit = validTotals.filter(total => total > dailyLimit).length;
+  const maxIntake = validTotals.length > 0 ? Math.max(...validTotals) : 0;
+
+  if (loading) {
+    return (
+      <View
+        style={[styles.container, { backgroundColor: AppTheme.background }]}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.header}>
+            <View style={{ width: 50 }} />
+            <Text style={styles.headerTitle}>Historial</Text>
+            <View />
+          </View>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Cargando historial...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: AppTheme.background }]}>
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Historial</Text>
+        </View>
+
+        <ScrollView style={styles.scrollView}>
+          {/* Chart */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <MaterialIcons
+                name="bar-chart"
+                size={24}
+                color={AppTheme.text.primary}
+              />
+              <Text style={styles.cardTitle}>Semana actual (Lun - Dom)</Text>
+            </View>
+            <View style={styles.chartWrapper}>
+              <LineChart
+                data={chartData}
+                width={screenWidth - 64}
+                height={200}
+                chartConfig={{
+                  backgroundColor: AppTheme.surface,
+                  backgroundGradientFrom: AppTheme.surface,
+                  backgroundGradientTo: AppTheme.surface,
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(121, 87, 87, ${opacity})`, // Using primary color
+                  labelColor: (opacity = 1) =>
+                    `rgba(156, 163, 175, ${opacity})`,
+                  style: {
+                    borderRadius: 8,
+                  },
+                  propsForDots: {
+                    r: "6",
+                    strokeWidth: "2",
+                    stroke: AppTheme.primary,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: "",
+                    color: AppTheme.border,
+                  },
+                  propsForLabels: {
+                    fontSize: 10,
+                  },
+                  strokeWidth: 2,
+                }}
+                bezier
+                style={{
+                  borderRadius: 8,
+                  marginLeft: -10,
+                }}
+              />
+              <View style={styles.dailyLimitBadge}>
+                <Text style={styles.dailyLimitText}>
+                  Límite diario: {dailyLimit}mg
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Stats */}
+          <View style={styles.statsContainer}>
+            <Text style={styles.sectionTitle}>Estadísticas</Text>
+
+            <View style={styles.statCard}>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Promedio diario</Text>
+                <Text style={[styles.statValue, styles.statValueNormal]}>
+                  {averageIntake}mg
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Días sobre el límite</Text>
+                <Text
+                  style={[
+                    styles.statValue,
+                    daysOverLimit > 0
+                      ? styles.statValueDanger
+                      : styles.statValueSuccess,
+                  ]}
+                >
+                  {daysOverLimit}/{totalDays}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Máximo en un día</Text>
+                <Text
+                  style={[
+                    styles.statValue,
+                    maxIntake > dailyLimit
+                      ? styles.statValueDanger
+                      : styles.statValueNormal,
+                  ]}
+                >
+                  {maxIntake}mg
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Tu límite diario</Text>
+                <Text style={[styles.statValue, styles.statValueNormal]}>
+                  {dailyLimit}mg
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Días registrados</Text>
+                <Text style={[styles.statValue, styles.statValueNormal]}>
+                  {totalDays}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Current Week Days */}
+          <View style={styles.recentDaysContainer}>
+            <Text style={styles.sectionTitle}>Días de la semana actual</Text>
+            {currentWeekDays.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>
+                  No hay datos de ingesta aún. ¡Comienza a registrar tu cafeína
+                  para ver tu historial!
+                </Text>
+              </View>
+            ) : (
+              currentWeekDays.map(day => {
+                // Safe date formatting
+                let formattedDate;
+                try {
+                  formattedDate = new Date(day.date).toLocaleDateString(
+                    "es-ES",
+                    {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                    }
+                  );
+                } catch {
+                  formattedDate = day.date;
+                }
+
+                // Safe number handling
+                const safeTotal = Number(day.total) || 0;
+
+                return (
+                  <View key={day.date} style={styles.dayItem}>
+                    <View style={styles.dayRow}>
+                      <Text style={styles.dayDate}>{formattedDate}</Text>
+                      <View style={styles.dayValues}>
+                        <Text
+                          style={[
+                            styles.dayAmount,
+                            safeTotal > dailyLimit
+                              ? styles.statValueDanger
+                              : styles.statValueNormal,
+                          ]}
+                        >
+                          {safeTotal}mg
+                        </Text>
+                        <Text style={styles.dayDifference}>
+                          {safeTotal > dailyLimit
+                            ? `+${safeTotal - dailyLimit}mg sobre`
+                            : `${dailyLimit - safeTotal}mg bajo`}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppTheme.background,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: AppTheme.primary,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: AppTheme.background,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -36,39 +352,43 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
+    justifyContent: "center",
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: AppTheme.border,
   },
   headerTitle: {
-    color: AppTheme.text.primary,
-    fontSize: Typography.size.xl,
+    color: AppTheme.secondary,
+    fontSize: Typography.size["2xl"],
     fontWeight: Typography.weight.bold,
-  },
-  backButton: {
-    color: AppTheme.text.primary,
-    fontSize: Typography.size.lg,
   },
   scrollView: {
     flex: 1,
   },
-  chartContainer: {
-    paddingHorizontal: Spacing.lg,
+  card: {
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.md,
     paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 16,
+    backgroundColor: AppTheme.surface,
   },
-  chartTitle: {
-    color: AppTheme.text.primary,
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  cardTitle: {
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
-    marginBottom: Spacing.md,
+    marginLeft: Spacing.xs,
+    color: AppTheme.text.primary,
   },
   chartWrapper: {
-    backgroundColor: AppTheme.surface,
     borderRadius: 8,
-    padding: Spacing.md,
+    padding: 0,
     position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
   },
   dailyLimitBadge: {
     position: "absolute",
@@ -84,21 +404,19 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
   },
   statsContainer: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
   },
   sectionTitle: {
     color: AppTheme.text.primary,
-    fontSize: Typography.size.lg,
+    fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
     marginBottom: Spacing.md,
   },
   statCard: {
     backgroundColor: AppTheme.surface,
     padding: Spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppTheme.border,
+    borderRadius: 16,
     marginBottom: Spacing.md,
   },
   statRow: {
@@ -124,16 +442,14 @@ const styles = StyleSheet.create({
     color: AppTheme.error,
   },
   recentDaysContainer: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     paddingBottom: Spacing["2xl"],
   },
   emptyState: {
     backgroundColor: AppTheme.surface,
     padding: Spacing.lg,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppTheme.border,
+    borderRadius: 16,
   },
   emptyStateText: {
     color: AppTheme.text.secondary,
@@ -143,9 +459,7 @@ const styles = StyleSheet.create({
   dayItem: {
     backgroundColor: AppTheme.surface,
     padding: Spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppTheme.border,
+    borderRadius: 16,
     marginBottom: Spacing.sm,
   },
   dayRow: {
@@ -170,283 +484,3 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
   },
 });
-
-export default function HistoryScreen() {
-  const [dailyTotals, setDailyTotals] = useState<DailyTotal>({});
-  const [dailyLimit, setDailyLimit] = useState(400);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      fetchHistory();
-      fetchDailyLimit();
-    }
-  }, [user]);
-
-  const fetchDailyLimit = async () => {
-    try {
-      const response = await caffeineApi.getDailyLimit();
-      setDailyLimit(response.dailyLimitMg || 400);
-    } catch (error) {
-      console.error("Failed to fetch daily limit:", error);
-    }
-  };
-
-  const fetchHistory = async () => {
-    try {
-      console.log("Fetching history...");
-      const historyData = await caffeineApi.getIntakeHistory();
-
-      const transformedData: DailyTotal = {};
-      historyData.forEach(item => {
-        const date = new Date(item.consumedAt).toISOString().split("T")[0];
-        if (!transformedData[date]) {
-          transformedData[date] = 0;
-        }
-        transformedData[date] += item.caffeineMg;
-      });
-
-      setDailyTotals(transformedData);
-    } catch (error) {
-      console.error("Failed to fetch history:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const screenWidth = Dimensions.get("window").width;
-
-  // Prepare chart data with safe number handling
-  const sortedEntries = Object.entries(dailyTotals)
-    .filter(([date, total]) => !isNaN(Number(total))) // Filter out invalid numbers
-    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime());
-
-  const last7Days = sortedEntries.slice(-7);
-
-  // Ensure chart has valid data
-  const chartData = {
-    labels:
-      last7Days.length > 0
-        ? last7Days.map(([date]) => {
-            try {
-              return new Date(date).toLocaleDateString("en-US", {
-                weekday: "short",
-              });
-            } catch {
-              return "Invalid";
-            }
-          })
-        : ["No Data"],
-    datasets: [
-      {
-        data:
-          last7Days.length > 0
-            ? last7Days.map(([, total]) => Number(total) || 0)
-            : [0],
-        strokeWidth: 3,
-      },
-    ],
-  };
-
-  const validTotals = Object.values(dailyTotals)
-    .filter(total => !isNaN(Number(total)) && isFinite(Number(total)))
-    .map(total => Number(total));
-
-  const totalDays = validTotals.length;
-  const averageIntake =
-    totalDays > 0
-      ? Math.round(validTotals.reduce((a, b) => a + b, 0) / totalDays)
-      : 0;
-  const daysOverLimit = validTotals.filter(total => total > dailyLimit).length;
-  const maxIntake = validTotals.length > 0 ? Math.max(...validTotals) : 0;
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading history...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Intake History</Text>
-        <View />
-      </View>
-
-      <ScrollView style={styles.scrollView}>
-        {/* Chart */}
-        {last7Days.length > 0 && (
-          <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Last 7 Days</Text>
-            <View style={styles.chartWrapper}>
-              <LineChart
-                data={chartData}
-                width={screenWidth - 80}
-                height={200}
-                chartConfig={{
-                  backgroundColor: AppTheme.surface,
-                  backgroundGradientFrom: AppTheme.surface,
-                  backgroundGradientTo: AppTheme.surface,
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                  labelColor: (opacity = 1) =>
-                    `rgba(156, 163, 175, ${opacity})`,
-                  style: {
-                    borderRadius: 8,
-                  },
-                  propsForDots: {
-                    r: "4",
-                    strokeWidth: "2",
-                    stroke: AppTheme.primary,
-                  },
-                  propsForBackgroundLines: {
-                    strokeDasharray: "",
-                  },
-                }}
-                bezier
-                style={{
-                  borderRadius: 8,
-                }}
-              />
-              <View style={styles.dailyLimitBadge}>
-                <Text style={styles.dailyLimitText}>
-                  Daily limit: {dailyLimit}mg
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>Statistics</Text>
-
-          <View style={styles.statCard}>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Average Daily Intake</Text>
-              <Text style={[styles.statValue, styles.statValueNormal]}>
-                {averageIntake}mg
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.statCard}>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Days Over Your Limit</Text>
-              <Text
-                style={[
-                  styles.statValue,
-                  daysOverLimit > 0
-                    ? styles.statValueDanger
-                    : styles.statValueSuccess,
-                ]}
-              >
-                {daysOverLimit}/{totalDays}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.statCard}>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Highest Single Day</Text>
-              <Text
-                style={[
-                  styles.statValue,
-                  maxIntake > dailyLimit
-                    ? styles.statValueDanger
-                    : styles.statValueNormal,
-                ]}
-              >
-                {maxIntake}mg
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.statCard}>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Your Daily Limit</Text>
-              <Text style={[styles.statValue, styles.statValueNormal]}>
-                {dailyLimit}mg
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.statCard}>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Days Tracked</Text>
-              <Text style={[styles.statValue, styles.statValueNormal]}>
-                {totalDays}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Recent Days */}
-        <View style={styles.recentDaysContainer}>
-          <Text style={styles.sectionTitle}>Recent Days</Text>
-          {sortedEntries.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                No intake data yet. Start logging your caffeine to see your
-                history!
-              </Text>
-            </View>
-          ) : (
-            sortedEntries
-              .slice(-10)
-              .reverse()
-              .map(([date, total]) => {
-                // Safe date formatting
-                let formattedDate;
-                try {
-                  formattedDate = new Date(date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  });
-                } catch {
-                  formattedDate = date;
-                }
-
-                // Safe number handling
-                const safeTotal = Number(total) || 0;
-
-                return (
-                  <View key={date} style={styles.dayItem}>
-                    <View style={styles.dayRow}>
-                      <Text style={styles.dayDate}>{formattedDate}</Text>
-                      <View style={styles.dayValues}>
-                        <Text
-                          style={[
-                            styles.dayAmount,
-                            safeTotal > dailyLimit
-                              ? styles.statValueDanger
-                              : styles.statValueNormal,
-                          ]}
-                        >
-                          {safeTotal}mg
-                        </Text>
-                        <Text style={styles.dayDifference}>
-                          {safeTotal > dailyLimit
-                            ? `+${safeTotal - dailyLimit}mg over`
-                            : `${dailyLimit - safeTotal}mg under`}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}

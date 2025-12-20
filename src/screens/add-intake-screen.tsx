@@ -133,13 +133,7 @@ export default function AddIntakeScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <MaterialIcons
-                name="arrow-back"
-                size={24}
-                color={AppTheme.secondary}
-              />
-            </TouchableOpacity>
+            <View style={{ width: 24 }} />
             <Text style={[styles.title, { color: AppTheme.secondary }]}>
               Agregar Ingesta
             </Text>

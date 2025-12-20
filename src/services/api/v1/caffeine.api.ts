@@ -64,7 +64,7 @@ class CaffeineApi {
       const response = await apiClientInstance.get("/api/v1/caffeine/intake", {
         params,
       });
-
+      console.log(response.data)
       // Handle the new response format which has logs nested in the response
       if (response.data && response.data.logs) {
         // Transform the logs to match the expected IntakeLogResponse format

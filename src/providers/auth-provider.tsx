@@ -235,6 +235,12 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const fetchSubscriptionStatus = async () => {
+    // Prevent multiple simultaneous subscription status fetches
+    if (subscriptionLoading) {
+      console.log("Subscription status already loading, skipping...");
+      return;
+    }
+
     setSubscriptionLoading(true);
     try {
       console.log("Fetching subscription status...");

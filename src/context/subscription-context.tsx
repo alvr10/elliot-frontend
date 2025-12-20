@@ -52,6 +52,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
       // Handle specific error cases
       if (error?.response?.status === 401) {
         errorMessage = "Authentication error. Please sign in again.";
+        // Don't show alert for 401 errors - let the calling component handle navigation
+        return false;
       } else if (error?.response?.status === 404) {
         errorMessage = "Service unavailable. Please try again later.";
       } else if (error?.response?.status >= 500) {

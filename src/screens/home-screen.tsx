@@ -179,10 +179,6 @@ export default function HomeScreen() {
                           : isToday
                             ? AppTheme.surface
                             : AppTheme.surface,
-                        borderColor: isSelected
-                          ? AppTheme.primary
-                          : AppTheme.border,
-                        borderWidth: isSelected ? 2 : 1,
                       },
                     ]}
                   >
@@ -302,7 +298,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
     paddingTop: Spacing["2xl"],
   },
   greeting: {

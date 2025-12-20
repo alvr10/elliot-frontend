@@ -31,6 +31,19 @@ export default function DrinkModal({
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const getDrinkImage = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "café":
+        return require("../../assets/images/drinks/coffee-image.png");
+      case "té":
+        return require("../../assets/images/drinks/tea-image.png");
+      case "bebida energética":
+        return require("../../assets/images/drinks/energy-drink-image.png");
+      default:
+        return require("../../assets/images/elliot.png");
+    }
+  };
+
   const handleAddIntake = async () => {
     if (!drink) {
       Alert.alert("Error", "Por favor selecciona una bebida");
@@ -109,7 +122,7 @@ export default function DrinkModal({
             >
               {/* Large Image */}
               <Image
-                source={require("../../assets/images/elliot.png")}
+                source={getDrinkImage(drink.category)}
                 style={styles.largeImage}
               />
 

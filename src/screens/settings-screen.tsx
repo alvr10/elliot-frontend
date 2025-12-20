@@ -4,7 +4,7 @@ import { useNotification } from "@/context";
 import { useAuth } from "@/hooks";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Alert,
   Image,
@@ -19,7 +19,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const router = useRouter();
   const { subscription, signOut } = useAuth();
   const { showNotification } = useNotification();
@@ -106,16 +105,7 @@ export default function SettingsScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <MaterialIcons
-              name="arrow-back"
-              size={24}
-              color={AppTheme.secondary}
-            />
-          </TouchableOpacity>
+          <View style={styles.backButton} />
           <Text style={styles.title}>Ajustes</Text>
         </View>
 
@@ -280,13 +270,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.secondary,
     borderRadius: 16,
     marginBottom: Spacing.md,
     padding: Spacing.md,
   },
   statusCard: {
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.secondary,
     borderRadius: 16,
     marginBottom: Spacing.md,
     padding: Spacing.md,

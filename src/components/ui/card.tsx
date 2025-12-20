@@ -23,7 +23,7 @@ const Card: React.FC<CardProps> = ({ icon, title, element }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: AppTheme.background,
+    backgroundColor: AppTheme.secondary,
     borderRadius: 16,
     marginBottom: Spacing.md,
     padding: Spacing.md,
