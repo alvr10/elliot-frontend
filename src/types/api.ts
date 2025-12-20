@@ -106,7 +106,7 @@ export interface IntakeLogResponse {
 }
 
 export interface DailyLimitResponse {
-  dailyLimitMg: number;
+  dailyCaffeineLimit: number;
   recommendedLimitMg: number;
 }
 

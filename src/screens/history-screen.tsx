@@ -27,7 +27,7 @@ export default function HistoryScreen() {
   const fetchDailyLimit = async () => {
     try {
       const response = await caffeineApi.getDailyLimit();
-      setDailyLimit(response.dailyLimitMg || 400);
+      setDailyLimit(response.dailyCaffeineLimit || 400);
     } catch (error) {
       console.error("Failed to fetch daily limit:", error);
     }
@@ -35,8 +35,6 @@ export default function HistoryScreen() {
 
   const fetchCurrentWeekHistory = async () => {
     try {
-      console.log("Fetching current week history...");
-
       // Generate current week dates from Monday to Sunday
       const days = [];
       const today = new Date();
@@ -255,15 +253,6 @@ export default function HistoryScreen() {
                 <Text style={styles.statLabel}>Tu límite diario</Text>
                 <Text style={[styles.statValue, styles.statValueNormal]}>
                   {dailyLimit}mg
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.statCard}>
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Días registrados</Text>
-                <Text style={[styles.statValue, styles.statValueNormal]}>
-                  {totalDays}
                 </Text>
               </View>
             </View>

@@ -1,18 +1,23 @@
 import { Card } from "@/components";
+import SignOutButton from "@/components/socia-auth-buttons/sign-out-button";
 import { AppTheme, Spacing, Typography } from "@/constants";
 import { useNotification } from "@/context";
 import { useAuth } from "@/hooks";
+import { caffeineApi } from "@/services/api/v1/caffeine.api";
+import { userApi } from "@/services/api/v1/user.api";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,
   Linking,
+  Modal,
   PanResponder,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -23,6 +28,10 @@ export default function SettingsScreen() {
   const { subscription, signOut } = useAuth();
   const { showNotification } = useNotification();
   const insets = useSafeAreaInsets();
+  const [dailyLimit, setDailyLimit] = useState<number>(0);
+  const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
+  const [tempDailyLimit, setTempDailyLimit] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (evt, gestureState) => {
@@ -37,40 +46,86 @@ export default function SettingsScreen() {
     },
   });
 
-  const handleSignOut = () => {
-    Alert.alert(
-      "Cerrar sesión",
-      "¿Estás seguro de que quieres cerrar sesión?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Cerrar sesión",
-          style: "destructive",
-          onPress: async () => {
-            await signOut();
-            showNotification("Sesión cerrada exitosamente", "info");
-          },
-        },
-      ]
-    );
-  };
+  // Fetch daily limit on component mount
+  useEffect(() => {
+    const fetchDailyLimit = async () => {
+      try {
+        const response = await caffeineApi.getDailyLimit();
+        const limit = response?.dailyCaffeineLimit || 0;
+        setDailyLimit(limit);
+        setTempDailyLimit(limit.toString());
+      } catch (error) {
+        console.error("Error fetching daily limit:", error);
+        // Set default values on error
+        setDailyLimit(400);
+        setTempDailyLimit("400");
+      }
+    };
+    fetchDailyLimit();
+  }, []);
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     Alert.alert(
       "Eliminar cuenta",
-      "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.",
+      "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer y se eliminarán todos tus datos permanentemente.",
       [
         { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
           onPress: async () => {
-            // Implement delete account logic
-            showNotification("Cuenta eliminada", "info");
+            try {
+              setLoading(true);
+
+              // Delete user data from our API
+              await userApi.deleteAccount();
+
+              // Sign out after successful deletion
+              await signOut();
+              showNotification("Cuenta eliminada exitosamente", "success");
+            } catch (error: any) {
+              console.error("Error deleting account:", error);
+              showNotification(
+                error.message || "Error al eliminar la cuenta",
+                "error"
+              );
+            } finally {
+              setLoading(false);
+            }
           },
         },
       ]
     );
+  };
+
+  const handleUpdateDailyLimit = async () => {
+    const limit = parseInt(tempDailyLimit);
+
+    if (isNaN(limit) || limit <= 0) {
+      showNotification("Por favor ingresa un límite válido", "error");
+      return;
+    }
+
+    if (limit > 1000) {
+      showNotification("El límite diario no puede exceder 1000mg", "error");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await caffeineApi.updateDailyLimit({ dailyCaffeineLimit: limit });
+      setDailyLimit(limit);
+      setShowDailyLimitModal(false);
+      showNotification("Límite diario actualizado exitosamente", "success");
+    } catch (error: any) {
+      console.error("Error updating daily limit:", error);
+      showNotification(
+        error.message || "Error al actualizar el límite diario",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openLink = (url: string) => {
@@ -161,12 +216,21 @@ export default function SettingsScreen() {
             icon="edit"
             title="Modificar ingesta diaria"
             element={
-              <TouchableOpacity onPress={() => router.push("/daily-limit")}>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={24}
-                  color={AppTheme.text.secondary}
-                />
+              <TouchableOpacity
+                onPress={() => {
+                  setTempDailyLimit(dailyLimit.toString());
+                  setShowDailyLimitModal(true);
+                }}
+                disabled={loading}
+              >
+                <View style={styles.dailyLimitContainer}>
+                  <Text style={styles.dailyLimitText}>{dailyLimit}mg</Text>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    color={AppTheme.text.secondary}
+                  />
+                </View>
               </TouchableOpacity>
             }
           />
@@ -211,9 +275,13 @@ export default function SettingsScreen() {
             icon="logout"
             title="Cerrar sesión"
             element={
-              <TouchableOpacity onPress={handleSignOut}>
-                <Text style={styles.buttonText}>Cerrar</Text>
-              </TouchableOpacity>
+              <SignOutButton
+                title="Cerrar"
+                showIcon={true}
+                onPress={() =>
+                  showNotification("Sesión cerrada exitosamente", "info")
+                }
+              />
             }
           />
 
@@ -221,11 +289,61 @@ export default function SettingsScreen() {
             icon="delete"
             title="Eliminar cuenta"
             element={
-              <TouchableOpacity onPress={handleDeleteAccount}>
-                <Text style={styles.dangerText}>Eliminar</Text>
+              <TouchableOpacity
+                onPress={handleDeleteAccount}
+                disabled={loading}
+              >
+                <Text
+                  style={[styles.dangerText, loading && styles.disabledText]}
+                >
+                  {loading ? "Eliminando..." : "Eliminar"}
+                </Text>
               </TouchableOpacity>
             }
           />
+
+          {/* Daily Limit Modal */}
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showDailyLimitModal}
+            onRequestClose={() => setShowDailyLimitModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Modificar Límite Diario</Text>
+                <Text style={styles.modalSubtitle}>
+                  Ingresa tu límite diario de cafeína en miligramos (mg)
+                </Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={tempDailyLimit}
+                  onChangeText={setTempDailyLimit}
+                  keyboardType="numeric"
+                  placeholder="Ej: 400"
+                  maxLength={4}
+                />
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setShowDailyLimitModal(false)}
+                    disabled={loading}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={handleUpdateDailyLimit}
+                    disabled={loading}
+                  >
+                    <Text style={styles.confirmButtonText}>
+                      {loading ? "Guardando..." : "Guardar"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </ScrollView>
       </View>
     </View>
@@ -320,5 +438,79 @@ const styles = StyleSheet.create({
   dangerText: {
     color: AppTheme.error,
     fontSize: Typography.size.base,
+  },
+  disabledText: {
+    opacity: 0.5,
+  },
+  dailyLimitContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  dailyLimitText: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.medium,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: AppTheme.secondary,
+    borderRadius: 16,
+    padding: Spacing.xl,
+    width: "100%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+    color: AppTheme.text.primary,
+    marginBottom: Spacing.sm,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: Typography.size.base,
+    color: AppTheme.text.secondary,
+    marginBottom: Spacing.lg,
+    textAlign: "center",
+  },
+  textInput: {
+    backgroundColor: AppTheme.backgroundSecondary,
+    borderRadius: 8,
+    padding: Spacing.md,
+    fontSize: Typography.size.lg,
+    marginBottom: Spacing.lg,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: AppTheme.backgroundSecondary,
+  },
+  confirmButton: {
+    backgroundColor: AppTheme.primary,
+  },
+  cancelButtonText: {
+    color: AppTheme.text.primary,
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.medium,
+  },
+  confirmButtonText: {
+    color: AppTheme.secondary,
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.medium,
   },
 });

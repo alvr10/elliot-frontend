@@ -1,11 +1,16 @@
-import { CircularProgress, IntakeLogItem } from "@/components";
+import {
+  CircularProgress,
+  IntakeLogItem,
+  ProfileImageSelector,
+} from "@/components";
 import { AppTheme, Colors, Spacing, Typography } from "@/constants";
 import { useAuth } from "@/hooks";
 import { caffeineApi } from "@/services/api";
+import { STORAGE_KEYS } from "@/services/api/config";
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   RefreshControl,
@@ -31,8 +36,32 @@ export default function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
-  const router = useRouter();
-  const { user } = useAuth();
+  const [showProfileSelector, setShowProfileSelector] = useState(false);
+  const [currentProfileImage, setCurrentProfileImage] = useState<string>("");
+  const { user, updateProfileImage } = useAuth();
+
+  // Load saved profile image on component mount
+  useEffect(() => {
+    const loadProfileImage = async () => {
+      try {
+        const savedImage = await AsyncStorage.getItem(
+          STORAGE_KEYS.USER_PROFILE_IMAGE
+        );
+        if (savedImage) {
+          setCurrentProfileImage(savedImage);
+        } else if (user?.profileImageUrl) {
+          setCurrentProfileImage(user.profileImageUrl);
+        } else {
+          setCurrentProfileImage("profile-1"); // Default profile image
+        }
+      } catch (error) {
+        console.error("Failed to load profile image:", error);
+        setCurrentProfileImage("profile-1"); // Default fallback
+      }
+    };
+
+    loadProfileImage();
+  }, [user?.profileImageUrl]);
 
   // Fetch data when screen comes into focus (after adding intake)
   useFocusEffect(
@@ -48,7 +77,7 @@ export default function HomeScreen() {
   const fetchUserLimit = async () => {
     try {
       const response = await caffeineApi.getDailyLimit();
-      const userLimit = response?.dailyLimitMg || 400;
+      const userLimit = response?.dailyCaffeineLimit || 400;
       setDailyLimit(userLimit);
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
@@ -82,6 +111,35 @@ export default function HomeScreen() {
     await fetchDailyIntake(selectedDate);
     await fetchUserLimit();
     setRefreshing(false);
+  };
+
+  const handleProfileImageSelect = async (imageUrl: string) => {
+    try {
+      setCurrentProfileImage(imageUrl);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE_IMAGE, imageUrl);
+      if (updateProfileImage) {
+        await updateProfileImage(imageUrl);
+      }
+      setShowProfileSelector(false);
+    } catch (error) {
+      console.error("Failed to save profile image:", error);
+    }
+  };
+
+  const getProfileImageSource = () => {
+    if (currentProfileImage.startsWith("http")) {
+      return { uri: currentProfileImage };
+    }
+
+    const profileMap: { [key: string]: any } = {
+      "profile-1": require("../../assets/images/profile/profile.png"),
+      "profile-2": require("../../assets/images/profile/profile-2.png"),
+      "profile-3": require("../../assets/images/profile/profile-3.png"),
+      "profile-4": require("../../assets/images/profile/profile-4.png"),
+      "profile-5": require("../../assets/images/profile/profile-5.png"),
+    };
+
+    return profileMap[currentProfileImage] || profileMap["profile-1"];
   };
 
   const caffeinePercentage = dailyIntake
@@ -134,14 +192,27 @@ export default function HomeScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.greeting, { color: AppTheme.text.primary }]}>
-              Hola, {user?.email ? user.email.split("@")[0] : "Usuario"}
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return "Buenos días";
+                if (hour < 18) return "Buenas tardes";
+                return "Buenas noches";
+              })()}
+              ,{" "}
+              {(() => {
+                const displayName =
+                  user?.name || user?.email?.split("@")[0] || "Usuario";
+                return displayName.length > 10
+                  ? displayName.substring(0, 10) + "..."
+                  : displayName;
+              })()}
             </Text>
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/settings")}
+              onPress={() => setShowProfileSelector(true)}
               style={styles.profileButton}
             >
               <Image
-                source={require("../../assets/images/profile.png")}
+                source={getProfileImageSource()}
                 style={styles.profileImage}
               />
             </TouchableOpacity>
@@ -250,30 +321,39 @@ export default function HomeScreen() {
           </View>
 
           {/* Selected Day's History */}
-          {dailyIntake?.logs && dailyIntake.logs.length > 0 && (
-            <View style={styles.historyContainer}>
-              <Text
-                style={[styles.historyTitle, { color: AppTheme.text.primary }]}
-              >
-                {selectedDate === new Date().toISOString().split("T")[0]
-                  ? "Historial de hoy"
-                  : `Historial del ${new Date(selectedDate).toLocaleDateString(
-                      "es-ES",
-                      {
-                        day: "numeric",
-                        month: "short",
-                      }
-                    )}`}
-              </Text>
+          <View style={styles.historyContainer}>
+            <Text
+              style={[styles.historyTitle, { color: AppTheme.text.primary }]}
+            >
+              {selectedDate === new Date().toISOString().split("T")[0]
+                ? "Historial de hoy"
+                : `Historial del ${new Date(selectedDate).toLocaleDateString(
+                    "es-ES",
+                    {
+                      day: "numeric",
+                      month: "short",
+                    }
+                  )}`}
+            </Text>
+            {dailyIntake?.logs && dailyIntake.logs.length > 0 && (
               <View style={styles.historyList}>
                 {dailyIntake.logs.map(log => (
                   <IntakeLogItem key={log.id} log={log} />
                 ))}
               </View>
-            </View>
-          )}
+            )}
+          </View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Profile Image Selector Modal */}
+      <ProfileImageSelector
+        visible={showProfileSelector}
+        onClose={() => setShowProfileSelector(false)}
+        onSelectImage={handleProfileImageSelect}
+        currentImageUrl={currentProfileImage}
+        googleProfileUrl={user?.profileImageUrl}
+      />
     </View>
   );
 }
@@ -303,6 +383,8 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: Typography.size["3xl"],
     fontWeight: Typography.weight.bold,
+    flex: 1,
+    flexWrap: "wrap",
   },
   profileButton: {
     padding: Spacing.sm,

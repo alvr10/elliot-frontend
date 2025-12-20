@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  profileImageUrl?: string;
 }
 
 interface Subscription {
@@ -33,6 +34,7 @@ export type AuthData = {
   signOut: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
   getCurrentToken: () => Promise<string | null>;
+  updateProfileImage: (imageUrl: string) => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthData>({
@@ -50,6 +52,7 @@ export const AuthContext = createContext<AuthData>({
   signOut: async () => {},
   refreshSubscription: async () => {},
   getCurrentToken: async () => null,
+  updateProfileImage: async () => {},
 });
 
 export const useAuthContext = () => useContext(AuthContext);

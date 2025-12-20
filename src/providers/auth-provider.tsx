@@ -1,15 +1,17 @@
 import { AuthContext } from "@/hooks";
 import { supabase } from "@/lib/supabase";
-import { STORAGE_KEYS } from "@/services/api/config";
+import { ApiClient, STORAGE_KEYS } from "@/services/api/config";
 import { subscriptionApi } from "@/services/api/v1/subscription.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session } from "@supabase/supabase-js";
-import { PropsWithChildren, useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { PropsWithChildren, useCallback, useEffect, useState } from "react";
+import { Alert, Platform } from "react-native";
 
 interface User {
   id: string;
   email: string;
+  name: string;
+  profileImageUrl?: string;
 }
 
 interface Subscription {
@@ -30,7 +32,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [session, setSession] = useState<Session | undefined | null>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [subscriptionError, setSubscriptionError] = useState(false);
+  const [, setSubscriptionError] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -41,6 +43,11 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         setUser({
           id: session.user.id,
           email: session.user.email!,
+          name: session.user.user_metadata?.name || "",
+          profileImageUrl:
+            session.user.user_metadata?.avatar_url ||
+            session.user.user_metadata?.picture ||
+            "",
         });
         fetchSubscriptionStatus();
       } else {
@@ -76,23 +83,61 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         setUser({
           id: session.user.id,
           email: session.user.email!,
+          name: session.user.user_metadata?.name || "",
+          profileImageUrl:
+            session.user.user_metadata?.avatar_url ||
+            session.user.user_metadata?.picture ||
+            "",
         });
         // Fetch subscription status for signed in user
         await fetchSubscriptionStatus();
       } else if (event === "SIGNED_OUT") {
         // Clear stored tokens
-        await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-        await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        await AsyncStorage.multiRemove([
+          STORAGE_KEYS.ACCESS_TOKEN,
+          STORAGE_KEYS.REFRESH_TOKEN,
+          STORAGE_KEYS.USER_PROFILE,
+        ]);
         setUser(null);
         setSubscription(null);
         setSession(null);
         setProfile(null);
         setSubscriptionError(false);
         setLoading(false);
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        // Update stored tokens when refreshed
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.ACCESS_TOKEN,
+          session.access_token
+        );
+        if (session.refresh_token) {
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.REFRESH_TOKEN,
+            session.refresh_token
+          );
+        }
+        console.log("Tokens updated after refresh");
       }
     });
 
-    return () => authSubscription.unsubscribe();
+    // Listen for auth failure events from API client
+    const handleAuthFailure = () => {
+      console.log("Auth failure event received, signing out");
+      signOut();
+    };
+
+    // Add event listener for auth failure (web-like approach)
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.addEventListener("auth:failure", handleAuthFailure);
+    }
+
+    return () => {
+      authSubscription.unsubscribe();
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.removeEventListener("auth:failure", handleAuthFailure);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch the profile when the session changes
@@ -141,18 +186,48 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       if (timeUntilExpiry < 300) {
         console.log("Token expiring soon, refreshing...");
 
-        const {
-          data: { session: newSession },
-          error: refreshError,
-        } = await supabase.auth.refreshSession();
+        // Use the API client's refresh mechanism
+        try {
+          // Create a new instance to access the refreshTokens method
+          const apiClientInstance = new ApiClient();
+          const newToken = await apiClientInstance.refreshTokens();
+          console.log("Session refreshed successfully via API client");
+          return newToken;
+        } catch (refreshError) {
+          console.error(
+            "Failed to refresh session via API client:",
+            refreshError
+          );
 
-        if (refreshError || !newSession) {
-          console.error("Failed to refresh session:", refreshError);
-          return null;
+          // Fallback to direct Supabase refresh
+          const {
+            data: { session: newSession },
+            error: fallbackError,
+          } = await supabase.auth.refreshSession();
+
+          if (fallbackError || !newSession) {
+            console.error(
+              "Failed to refresh session with fallback:",
+              fallbackError
+            );
+            return null;
+          }
+
+          // Update stored tokens
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.ACCESS_TOKEN,
+            newSession.access_token
+          );
+          if (newSession.refresh_token) {
+            await AsyncStorage.setItem(
+              STORAGE_KEYS.REFRESH_TOKEN,
+              newSession.refresh_token
+            );
+          }
+
+          console.log("Session refreshed successfully via fallback");
+          return newSession.access_token;
         }
-
-        console.log("Session refreshed successfully");
-        return newSession.access_token;
       }
 
       return session.access_token;
@@ -234,7 +309,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const fetchSubscriptionStatus = async () => {
+  const fetchSubscriptionStatus = useCallback(async () => {
     // Prevent multiple simultaneous subscription status fetches
     if (subscriptionLoading) {
       console.log("Subscription status already loading, skipping...");
@@ -274,22 +349,70 @@ export default function AuthProvider({ children }: PropsWithChildren) {
       setSubscriptionLoading(false);
       setLoading(false); // Clear main loading after subscription check
     }
-  };
+  }, [subscriptionLoading]);
 
   const signOut = async () => {
     try {
       console.log("Signing out...");
+      // Clear tokens first to prevent any further API calls
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.ACCESS_TOKEN,
+        STORAGE_KEYS.REFRESH_TOKEN,
+        STORAGE_KEYS.USER_PROFILE,
+      ]);
+
+      // Then sign out from Supabase
       await supabase.auth.signOut();
+
+      // Update state
+      setUser(null);
+      setSubscription(null);
+      setSession(null);
+      setProfile(null);
+      setSubscriptionError(false);
+      setLoading(false);
     } catch (error) {
       console.error("Error signing out:", error);
+      // Ensure state is updated even if sign out fails
+      setUser(null);
+      setSubscription(null);
+      setSession(null);
+      setProfile(null);
+      setSubscriptionError(false);
+      setLoading(false);
     }
   };
 
-  const refreshSubscription = async () => {
+  const refreshSubscription = useCallback(async () => {
     // Reset subscription error to allow fetching
     setSubscriptionError(false);
     await fetchSubscriptionStatus();
-  };
+  }, [fetchSubscriptionStatus]);
+
+  const updateProfileImage = useCallback(
+    async (imageUrl: string) => {
+      if (!user) return;
+
+      try {
+        // Update local state
+        setUser(prev => (prev ? { ...prev, profileImageUrl: imageUrl } : null));
+
+        // Store in AsyncStorage for persistence
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE_IMAGE, imageUrl);
+
+        // Update profile in database if needed
+        if (session) {
+          await supabase
+            .from("profiles")
+            .update({ profile_image_url: imageUrl })
+            .eq("id", session.user.id);
+        }
+      } catch (error) {
+        console.error("Failed to update profile image:", error);
+      }
+    },
+    [user, session]
+  );
 
   return (
     <AuthContext.Provider
@@ -308,6 +431,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         signOut,
         refreshSubscription,
         getCurrentToken,
+        updateProfileImage,
       }}
     >
       {children}
