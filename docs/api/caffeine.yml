@@ -1,0 +1,125 @@
+caffeine:
+  base_path: "/api/v1/caffeine"
+  description: "Caffeine intake tracking endpoints"
+  authentication: "Bearer token required"
+  guard: "AuthGuard"
+  endpoints:
+    - path: "/log-intake"
+      method: "POST"
+      summary: "Log caffeine intake"
+      request_body:
+        required: true
+        schema:
+          type: object
+          required: ["drinkId", "servings", "consumedAt"]
+          properties:
+            drinkId:
+              type: string
+              description: "ID of the drink consumed"
+            servings:
+              type: number
+              minimum: 0.1
+              description: "Number of servings consumed"
+            consumedAt:
+              type: string
+              format: date-time
+              description: "ISO 8601 timestamp of consumption (required)"
+      responses:
+        201:
+          description: "Intake logged successfully"
+          schema:
+            type: object
+            properties:
+              id: { type: string }
+              drinkId: { type: string }
+              servings: { type: number }
+              consumedAt: { type: string, format: date-time }
+        400: "Invalid request data"
+        401: "Unauthorized"
+    - path: "/intake"
+      method: "GET"
+      summary: "Get caffeine intake history"
+      parameters:
+        - name: "period"
+          in: "query"
+          description: "Time period for intake data"
+          required: false
+          type: string
+          enum: ["daily", "weekly", "monthly", "yearly"]
+        - name: "date"
+          in: "query"
+          description: "Specific date for intake data"
+          required: false
+          type: string
+          format: date
+      responses:
+        200:
+          description: "Intake history retrieved successfully"
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id: { type: string }
+                drinkId: { type: string }
+                servings: { type: number }
+                consumedAt: { type: string, format: date-time }
+                caffeineMg: { type: number }
+        401: "Unauthorized"
+    - path: "/daily-limit"
+      method: "GET"
+      summary: "Get user's daily caffeine limit"
+      responses:
+        200:
+          description: "Daily limit retrieved successfully"
+          schema:
+            type: object
+            properties:
+              dailyLimitMg: { type: number }
+              recommendedLimitMg: { type: number }
+        401: "Unauthorized"
+    - path: "/daily-limit"
+      method: "PUT"
+      summary: "Update user's daily caffeine limit"
+      request_body:
+        required: true
+        schema:
+          type: object
+          required: ["dailyCaffeineLimit"]
+          properties:
+            dailyCaffeineLimit:
+              type: number
+              minimum: 50
+              maximum: 1000
+              description: "New daily caffeine limit in milligrams"
+      responses:
+        200:
+          description: "Daily limit updated successfully"
+          schema:
+            type: object
+            properties:
+              dailyCaffeineLimit: { type: number }
+        400: "Invalid request data"
+        401: "Unauthorized"
+        404: "User not found"
+    - path: "/drinks"
+      method: "GET"
+      summary: "Get all available drinks"
+      description: "Retrieves all public drinks from the database"
+      responses:
+        200:
+          description: "Drinks retrieved successfully"
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id: { type: string }
+                name: { type: string }
+                caffeine_per_serving: { type: number }
+                category: { type: string }
+                brand: { type: string }
+                serving_size: { type: string }
+                is_public: { type: boolean }
+                image_url: { type: string }
+                description: { type: string }

@@ -1,0 +1,35 @@
+user:
+  base_path: "/api/v1/user"
+  description: "User account management endpoints"
+  authentication: "Bearer token required"
+  guard: "AuthGuard"
+  endpoints:
+    - path: "/account"
+      method: "DELETE"
+      summary: "Delete user account"
+      description: "Permanently deletes the user account and all associated data (intake logs, custom drinks, subscription info)"
+      responses:
+        200:
+          description: "User account deleted successfully"
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              userId: { type: string }
+        400:
+          description: "Failed to delete user account"
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              error: { type: string }
+              statusCode: { type: number }
+        401: "Unauthorized - Invalid or expired token"
+        404:
+          description: "User not found"
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              error: { type: string }
+              statusCode: { type: number }
