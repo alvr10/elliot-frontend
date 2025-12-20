@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Elliot - Caffeine tracker",
+    "name": "Elliot",
     "slug": "elliot-caffeine-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "dark",
-    "scheme": "exp",
+    "scheme": "elliotcaffeine",
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
@@ -15,16 +15,28 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.elliotcaffeine"
+      "bundleIdentifier": "com.alvarorios.elliotcaffeine"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#795757"
       },
-      "package": "com.yourcompany.elliotcaffeine",
+      "package": "com.alvarorios.elliotcaffeine",
       "edgeToEdgeEnabled": true,
-      "permissions": []
+      "permissions": [],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "elliotcaffeine"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       [
