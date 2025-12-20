@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 
@@ -7,26 +7,35 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#FFFFFF",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarInactiveTintColor: "rgba(202, 202, 202, 1)",
         tabBarStyle: {
-          backgroundColor: "#000000",
-          borderTopColor: "#1F2937",
+          backgroundColor: "#795757",
+          borderTopColor: "#795757",
+          paddingBottom: 20,
+          paddingTop: 10,
+          height: 80,
         },
         headerShown: false,
+        tabBarShowLabel: true,
+        animation: "shift",
       }}
     >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-        }}
-      />
       <Tabs.Screen
         name="history"
         options={{
           title: "History",
-          tabBarIcon: ({ color }) => <TabBarIcon name="time" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="bar-chart" size={32} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="add-intake"
+        options={{
+          title: "Add Intake",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="add-circle" size={32} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -34,14 +43,10 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name="settings" color={color} />
+            <MaterialIcons name="person" size={32} color={color} />
           ),
         }}
       />
     </Tabs>
   );
-}
-
-function TabBarIcon({ name, color }: { name: string; color: string }) {
-  return <Ionicons name={name as any} size={24} color={color} />;
 }

@@ -60,32 +60,41 @@ const AuthStep: React.FC<AuthStepProps> = ({
   }, [email]);
 
   const handleAuth = async () => {
+    console.log("handleAuth called with:", { email, name, authMode });
+
     // Reset errors
     setEmailError("");
 
     // Validate email
     if (!email) {
+      console.log("Email validation failed: empty email");
       setEmailError("El correo electrónico es requerido");
       return;
     }
 
     if (!validateEmail(email)) {
+      console.log("Email validation failed: invalid format", email);
       setEmailError("Por favor ingresa un correo electrónico válido");
       return;
     }
 
     // Validate name for signup
     if (authMode === "signup" && !validateName(name)) {
+      console.log("Name validation failed for signup", name);
       setEmailError("El nombre debe tener al menos 2 caracteres");
       return;
     }
 
+    console.log("Validation passed, setting submitting to true");
     setIsSubmitting(true);
     try {
+      console.log("Calling onAuth with:", { email, name, authMode });
       await onAuth(email, name, authMode);
+      console.log("onAuth completed successfully");
     } catch (error) {
       console.error("Authentication error:", error);
     } finally {
+      console.log("Setting submitting to false");
       setIsSubmitting(false);
     }
   };
@@ -200,7 +209,7 @@ const AuthStep: React.FC<AuthStepProps> = ({
                 (authMode === "signup" && !validateName(name))
               }
             >
-              {authMode === "signup" ? "Registrarse" : "Enviar enlace mágico"}
+              {authMode === "signup" ? "Registrarse" : "Iniciar sesión"}
             </Button>
 
             <TouchableOpacity

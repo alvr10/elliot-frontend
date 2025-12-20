@@ -25,6 +25,6 @@ export default function IndexPage() {
     return <Redirect href="/beta-access" />;
   }
 
-  // Redirect to home if user is authenticated and has active subscription
-  return <Redirect href="/(tabs)/home" />;
+  // Redirect to history if user is authenticated and has active subscription
+  return <Redirect href="/(tabs)/history" />;
 }

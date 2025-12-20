@@ -93,7 +93,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     });
 
     return () => authSubscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch the profile when the session changes
@@ -167,12 +166,15 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     try {
       console.log("Requesting magic link for:", email);
       // Use Supabase directly for magic link
-      const { error } = await supabase.auth.signInWithOtp({
+      const { data, error } = await supabase.auth.signInWithOtp({
         email,
       });
 
+      console.log("Magic link response:", { data, error });
+
       if (error) throw error;
 
+      console.log("Magic link sent successfully, showing alert");
       Alert.alert(
         "Check your email",
         "We sent you a magic link. Please check your email and click the link to sign in."
@@ -196,7 +198,10 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log(error);
+        throw error;
+      }
 
       Alert.alert(
         "Check your email",
@@ -230,14 +235,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const fetchSubscriptionStatus = async () => {
-    // Don't fetch if we already had an error
-    if (subscriptionError) {
-      console.log("Skipping subscription fetch due to previous error");
-      setSubscriptionLoading(false);
-      setLoading(false);
-      return;
-    }
-
     setSubscriptionLoading(true);
     try {
       console.log("Fetching subscription status...");
@@ -283,6 +280,8 @@ export default function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const refreshSubscription = async () => {
+    // Reset subscription error to allow fetching
+    setSubscriptionError(false);
     await fetchSubscriptionStatus();
   };
 

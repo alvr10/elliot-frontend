@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks";
-import { HistoryScreen } from "@/screens";
+import HomeScreen from "@/screens/home-screen";
 import { Redirect } from "expo-router";
 import React from "react";
 
@@ -26,5 +26,5 @@ export default function HistoryPage() {
     return <Redirect href="/beta-access" />;
   }
 
-  return <HistoryScreen />;
+  return <HomeScreen />;
 }

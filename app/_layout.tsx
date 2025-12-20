@@ -31,7 +31,41 @@ function RootLayoutNav() {
     const handleDeepLink = async (url: string) => {
       console.log("Deep link received:", url);
 
-      if (url.includes("auth")) {
+      // Check if this is a magic link with tokens
+      if (url.includes("access_token") && url.includes("refresh_token")) {
+        console.log("Detected magic link with tokens, processing...");
+        try {
+          // Extract session data from the URL hash fragment
+          const urlObj = new URL(url);
+          const hashFragment = urlObj.hash.substring(1); // Remove the # character
+          const params = new URLSearchParams(hashFragment);
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+
+          console.log("Extracted tokens:", {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken,
+          });
+
+          if (accessToken && refreshToken) {
+            // Set the session manually using Supabase
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (error) {
+              console.error("Error setting session from magic link:", error);
+            } else {
+              console.log("Magic link session set successfully");
+            }
+          } else {
+            console.log("No tokens found in magic link URL");
+          }
+        } catch (error) {
+          console.error("Error processing magic link:", error);
+        }
+      } else if (url.includes("auth")) {
         // This is an OAuth callback
         try {
           // Parse the URL to extract the session
@@ -89,6 +123,8 @@ function RootLayoutNav() {
         } catch (error) {
           console.error("Error processing magic link:", error);
         }
+      } else {
+        console.log("URL doesn't match any known authentication patterns");
       }
     };
 

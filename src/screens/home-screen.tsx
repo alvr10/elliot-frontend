@@ -17,29 +17,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface IntakeLog {
-  id: number;
-  total_caffeine: number;
-  servings: number;
-  consumed_at: string;
-  drinks: {
-    name: string;
-    category: string;
-    brand?: string;
-  };
-}
-
 interface DailyIntake {
   date: string;
   total_caffeine: number;
-  logs: IntakeLog[];
+  logs: import("@/types/api").IntakeLogResponse[];
 }
 
 export default function HomeScreen() {
   const [dailyIntake, setDailyIntake] = useState<DailyIntake | null>(null);
-  const [dailyLimit, setDailyLimit] = useState(400); // USER'S CUSTOM LIMIT
+  const [dailyLimit, setDailyLimit] = useState(400);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
   const router = useRouter();
   const { user } = useAuth();
 
@@ -56,27 +47,28 @@ export default function HomeScreen() {
 
   const fetchUserLimit = async () => {
     try {
-      console.log("Fetching user profile for daily limit...");
       const response = await caffeineApi.getDailyLimit();
-      const userLimit = response?.dailyCaffeineLimit || 400;
-      console.log("User's daily limit:", userLimit);
+      const userLimit = response?.dailyLimitMg || 400;
       setDailyLimit(userLimit);
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
     }
   };
 
-  const fetchDailyIntake = async () => {
+  const fetchDailyIntake = async (date?: string) => {
     try {
       if (!user) return;
 
-      console.log("Fetching daily intake...");
-      const today = new Date().toISOString().split("T")[0];
+      const targetDate = date || selectedDate;
+      const logs =
+        (await caffeineApi.getIntakeHistory("daily", targetDate)) || [];
 
-      const logs = (await caffeineApi.getIntakeHistory("daily", today)) || [];
-      const total_caffeine = logs.reduce((sum, log) => sum + log.caffeineMg, 0);
-      const data = { date: today, total_caffeine, logs };
-      console.log("Daily intake data:", data);
+      // Calculate total caffeine from the logs
+      const total_caffeine = logs.reduce(
+        (sum, log) => sum + (log.caffeineMg || 0),
+        0
+      );
+      const data = { date: targetDate, total_caffeine, logs };
       setDailyIntake(data as any);
     } catch (error) {
       console.error("Failed to fetch daily intake:", error);
@@ -87,12 +79,11 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchDailyIntake();
+    await fetchDailyIntake(selectedDate);
     await fetchUserLimit();
     setRefreshing(false);
   };
 
-  // USE USER'S CUSTOM DAILY LIMIT
   const caffeinePercentage = dailyIntake
     ? (dailyIntake.total_caffeine / dailyLimit) * 100
     : 0;
@@ -161,8 +152,16 @@ export default function HomeScreen() {
             {days.map((day, index) => {
               const isToday =
                 day.date === new Date().toISOString().split("T")[0];
+              const isSelected = day.date === selectedDate;
               return (
-                <View key={index} style={styles.dayItem}>
+                <TouchableOpacity
+                  key={index}
+                  style={styles.dayItem}
+                  onPress={() => {
+                    setSelectedDate(day.date);
+                    fetchDailyIntake(day.date);
+                  }}
+                >
                   <Text
                     style={[
                       styles.dayLabel,
@@ -175,10 +174,15 @@ export default function HomeScreen() {
                     style={[
                       styles.dayCircle,
                       {
-                        backgroundColor: isToday
+                        backgroundColor: isSelected
                           ? AppTheme.primary
-                          : AppTheme.surface,
-                        borderColor: AppTheme.border,
+                          : isToday
+                            ? AppTheme.surface
+                            : AppTheme.surface,
+                        borderColor: isSelected
+                          ? AppTheme.primary
+                          : AppTheme.border,
+                        borderWidth: isSelected ? 2 : 1,
                       },
                     ]}
                   >
@@ -186,102 +190,94 @@ export default function HomeScreen() {
                       style={[
                         styles.dayNumber,
                         {
-                          color: isToday
+                          color: isSelected
                             ? AppTheme.secondary
-                            : AppTheme.text.primary,
+                            : isToday
+                              ? AppTheme.text.primary
+                              : AppTheme.text.primary,
                         },
                       ]}
                     >
                       {day.dayNum}
                     </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>
 
           {/* Daily Intake Card */}
           <View style={[styles.card, { backgroundColor: AppTheme.primary }]}>
-            <View style={styles.cardLeft}>
-              <View style={styles.cardTitleContainer}>
-                <MaterialIcons name="bolt" size={24} color={Colors.white} />
-                <Text style={[styles.cardTitle, { color: Colors.white }]}>
-                  Ingesta diaria
-                </Text>
-              </View>
-              <Text style={[styles.percentage, { color: Colors.white }]}>
-                {Math.round(caffeinePercentage)}%
+            {/* Title and icon at top left corner */}
+            <View style={styles.cardHeader}>
+              <MaterialIcons name="bolt" size={24} color={Colors.white} />
+              <Text style={[styles.cardTitle, { color: Colors.white }]}>
+                Ingesta diaria
               </Text>
             </View>
-            <View style={styles.cardRight}>
-              <CircularProgress
-                size={80}
-                strokeWidth={8}
-                progress={Math.min(caffeinePercentage, 100)}
-                backgroundColor="transparent"
-                progressColor={Colors.secondary}
-                centerFillColor={AppTheme.secondary}
-              >
-                <View style={styles.progressCenter}>
-                  <Text style={[styles.progressText, { color: Colors.white }]}>
-                    {dailyIntake?.total_caffeine || 0}
-                  </Text>
-                  <View style={styles.progressSeparator} />
-                  <Text
-                    style={[styles.progressLimitText, { color: Colors.white }]}
-                  >
-                    {dailyLimit}
-                  </Text>
-                </View>
-              </CircularProgress>
+
+            {/* Content area with percentage and circular progress */}
+            <View style={styles.cardContent}>
+              <View style={styles.cardLeft}>
+                <Text style={[styles.percentage, { color: Colors.white }]}>
+                  {Math.round(caffeinePercentage)}%
+                </Text>
+              </View>
+              <View style={styles.cardRight}>
+                <CircularProgress
+                  size={120}
+                  strokeWidth={10}
+                  progress={Math.min(caffeinePercentage, 100)}
+                  backgroundColor="transparent"
+                  progressColor="#FFA500" // Yellow-orange color
+                  centerFillColor={AppTheme.secondary}
+                >
+                  <View style={styles.progressCenter}>
+                    <Text
+                      style={[styles.progressText, { color: Colors.primary }]}
+                    >
+                      {dailyIntake?.total_caffeine || 0}
+                    </Text>
+                    <View style={styles.progressSeparator} />
+                    <Text
+                      style={[
+                        styles.progressLimitText,
+                        { color: Colors.primary },
+                      ]}
+                    >
+                      {dailyLimit} mg
+                    </Text>
+                  </View>
+                </CircularProgress>
+              </View>
             </View>
           </View>
 
-          {/* Today's History */}
+          {/* Selected Day's History */}
           {dailyIntake?.logs && dailyIntake.logs.length > 0 && (
             <View style={styles.historyContainer}>
               <Text
                 style={[styles.historyTitle, { color: AppTheme.text.primary }]}
               >
-                Historial de hoy
+                {selectedDate === new Date().toISOString().split("T")[0]
+                  ? "Historial de hoy"
+                  : `Historial del ${new Date(selectedDate).toLocaleDateString(
+                      "es-ES",
+                      {
+                        day: "numeric",
+                        month: "short",
+                      }
+                    )}`}
               </Text>
               <View style={styles.historyList}>
                 {dailyIntake.logs.map(log => (
-                  <IntakeLogItem
-                    key={log.id}
-                    log={log}
-                    onUpdate={fetchDailyIntake}
-                  />
+                  <IntakeLogItem key={log.id} log={log} />
                 ))}
               </View>
             </View>
           )}
         </ScrollView>
       </SafeAreaView>
-
-      {/* Tabbar */}
-      <View style={styles.tabbar}>
-        <TouchableOpacity onPress={() => router.push("/(tabs)/history")}>
-          <MaterialIcons
-            name="bar-chart"
-            size={32}
-            color={AppTheme.secondary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => router.push("/(tabs)/add-intake")}
-          style={[styles.addButton]}
-        >
-          <MaterialIcons
-            name="add-circle"
-            size={48}
-            color={AppTheme.secondary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/(tabs)/settings")}>
-          <MaterialIcons name="person" size={32} color={AppTheme.secondary} />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -295,7 +291,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingBottom: 80,
   },
   loadingText: {
     fontSize: Typography.size.lg,
@@ -347,21 +342,25 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.medium,
   },
   card: {
-    flexDirection: "row",
     marginHorizontal: Spacing.md,
     marginVertical: Spacing.md,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.md,
     borderRadius: 16,
+    minHeight: 140,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  cardContent: {
+    flexDirection: "row",
+    flex: 1,
   },
   cardLeft: {
     flex: 1,
     justifyContent: "center",
-  },
-  cardTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.sm,
   },
   cardTitle: {
     fontSize: Typography.size.lg,
@@ -369,7 +368,7 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   percentage: {
-    fontSize: Typography.size["4xl"],
+    fontSize: 60,
     fontWeight: Typography.weight.bold,
   },
   cardRight: {
@@ -381,17 +380,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   progressText: {
-    fontSize: Typography.size.base,
+    fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
   },
   progressSeparator: {
     height: 1,
-    backgroundColor: Colors.secondary,
-    width: 20,
+    backgroundColor: Colors.primary,
+    width: 40,
     marginVertical: 2,
   },
   progressLimitText: {
-    fontSize: Typography.size.base,
+    fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
   },
   historyContainer: {
@@ -405,29 +404,5 @@ const styles = StyleSheet.create({
   },
   historyList: {
     // Add spacing if needed
-  },
-  tabbar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    backgroundColor: AppTheme.primary,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 54,
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderRadius: 16,
-  },
-  addButton: {
-    marginTop: -20,
-    borderWidth: 2,
-    borderColor: AppTheme.error,
-    borderRadius: 26,
-    width: 52,
-    height: 52,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

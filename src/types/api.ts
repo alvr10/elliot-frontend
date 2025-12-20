@@ -93,7 +93,7 @@ export interface SignupResponse {
 export interface LogIntakeDto {
   drinkId: string;
   servings: number;
-  consumedAt?: string;
+  consumedAt: string;
 }
 
 export interface IntakeLogResponse {
@@ -102,10 +102,32 @@ export interface IntakeLogResponse {
   servings: number;
   consumedAt: string;
   caffeineMg: number;
+  drink?: Drink;
 }
 
 export interface DailyLimitResponse {
+  dailyLimitMg: number;
+  recommendedLimitMg: number;
+}
+
+export interface UpdateDailyLimitDto {
   dailyCaffeineLimit: number;
+}
+
+export interface UpdateDailyLimitResponse {
+  dailyCaffeineLimit: number;
+}
+
+export interface Drink {
+  id: string;
+  name: string;
+  caffeine_per_serving: number;
+  category: string;
+  brand: string;
+  serving_size: string;
+  is_public: boolean;
+  image_url: string;
+  description: string;
 }
 
 // Subscription types

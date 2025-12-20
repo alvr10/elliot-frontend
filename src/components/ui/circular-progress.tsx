@@ -10,6 +10,7 @@ interface CircularProgressProps {
   progressColor: string;
   centerFillColor?: string;
   children?: React.ReactNode;
+  backgroundCircleColor?: string;
 }
 
 export default function CircularProgress({
@@ -20,11 +21,13 @@ export default function CircularProgress({
   progressColor,
   centerFillColor = "transparent",
   children,
+  backgroundCircleColor = "#e0e0e0",
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = circumference;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const backgroundRadius = (size - strokeWidth * 2) / 2;
 
   return (
     <View
@@ -36,16 +39,18 @@ export default function CircularProgress({
       }}
     >
       <Svg width={size} height={size} style={{ position: "absolute" }}>
-        {/* Center Fill */}
+        {/* Large Background Circle with low opacity */}
         <Circle
           cx={size / 2}
           cy={size / 2}
-          r={radius - strokeWidth / 2}
-          fill={centerFillColor}
-          stroke="transparent"
-          strokeWidth={0}
+          r={backgroundRadius}
+          stroke={backgroundCircleColor}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          opacity={0.2}
         />
-        {/* Background Circle */}
+
+        {/* Main Background Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -54,6 +59,7 @@ export default function CircularProgress({
           strokeWidth={strokeWidth}
           fill="transparent"
         />
+
         {/* Progress Circle */}
         <Circle
           cx={size / 2}
@@ -67,6 +73,18 @@ export default function CircularProgress({
           strokeLinecap="round"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
+
+        {/* Center Fill - only render if not transparent */}
+        {centerFillColor !== "transparent" && (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius - strokeWidth - 2}
+            fill={centerFillColor}
+            stroke="transparent"
+            strokeWidth={0}
+          />
+        )}
       </Svg>
       {children}
     </View>

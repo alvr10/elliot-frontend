@@ -7,9 +7,12 @@
 
 import {
   DailyLimitResponse,
+  Drink,
   ErrorResponse,
   IntakeLogResponse,
   LogIntakeDto,
+  UpdateDailyLimitDto,
+  UpdateDailyLimitResponse,
 } from "../../../types/api";
 import apiClientInstance from "../config";
 
@@ -61,6 +64,21 @@ class CaffeineApi {
       const response = await apiClientInstance.get("/api/v1/caffeine/intake", {
         params,
       });
+
+      // Handle the new response format which has logs nested in the response
+      if (response.data && response.data.logs) {
+        // Transform the logs to match the expected IntakeLogResponse format
+        return response.data.logs.map((log: any) => ({
+          id: log.id,
+          drinkId: log.drink_id,
+          servings: log.servings,
+          consumedAt: log.consumed_at,
+          caffeineMg: log.total_caffeine, // Map total_caffeine to caffeineMg
+          drink: log.drink // Include the nested drink object with details
+        }));
+      }
+
+      // Fallback to the old format handling
       return Array.isArray(response.data)
         ? response.data
         : response.data?.data || [];
@@ -81,7 +99,52 @@ class CaffeineApi {
   async getDailyLimit(): Promise<DailyLimitResponse> {
     try {
       const response = await apiClientInstance.get<DailyLimitResponse>(
-        "/api/v1/caffeine/daily-limit"
+        "/api/v1/caffeine/daily-limit",
+        {
+          params: { _t: Date.now() }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error as ErrorResponse;
+    }
+  }
+
+  /**
+   * PUT /caffeine/daily-limit
+   * Update user's daily caffeine limit
+   *
+   * Requires: Bearer token
+   *
+   * @param data - Daily limit data
+   * @returns UpdateDailyLimitResponse with updated limit
+   * @throws ErrorResponse on invalid data or unauthorized
+   */
+  async updateDailyLimit(data: UpdateDailyLimitDto): Promise<UpdateDailyLimitResponse> {
+    try {
+      const response = await apiClientInstance.put<UpdateDailyLimitResponse>(
+        "/api/v1/caffeine/daily-limit",
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw error as ErrorResponse;
+    }
+  }
+
+  /**
+   * GET /caffeine/drinks
+   * Get all available drinks
+   *
+   * Requires: Bearer token
+   *
+   * @returns Array of Drink objects
+   * @throws ErrorResponse on unauthorized
+   */
+  async getDrinks(): Promise<Drink[]> {
+    try {
+      const response = await apiClientInstance.get<Drink[]>(
+        "/api/v1/caffeine/drinks"
       );
       return response.data;
     } catch (error) {

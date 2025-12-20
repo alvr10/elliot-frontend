@@ -67,7 +67,9 @@ export default function BetaAccessScreen() {
     try {
       console.log("Setting up beta access...");
       await createSubscription();
+      console.log("Subscription created, now refreshing...");
       await refreshSubscription();
+      console.log("Subscription refresh completed");
     } catch (error: any) {
       console.error("Failed to setup beta access:", error);
 
@@ -101,25 +103,36 @@ export default function BetaAccessScreen() {
   };
 
   const handleAuth = async (email: string, name: string, mode: AuthMode) => {
+    console.log("BetaAccessScreen handleAuth called with:", {
+      email,
+      name,
+      mode,
+    });
+
     if (!email) {
+      console.log("Email validation failed in BetaAccessScreen");
       showNotification("Por favor ingresa tu correo electrónico", "error");
       return;
     }
 
-    if ((mode === "signup" && !name) || name.trim().length < 2) {
+    // Only validate name for signup mode
+    if (mode === "signup" && (!name || name.trim().length < 2)) {
+      console.log("Name validation failed in BetaAccessScreen");
       showNotification("Por favor ingresa tu nombre completo", "error");
       return;
     }
 
     try {
+      console.log("Calling auth function for mode:", mode);
       if (mode === "signup") {
         await signUpWithEmail(email, name);
       } else {
         await signInWithEmail(email);
       }
+      console.log("Auth function completed successfully in BetaAccessScreen");
       // Beta access will be set up automatically in the useEffect
     } catch (error: any) {
-      console.log("Auth error:", error);
+      console.log("Auth error in BetaAccessScreen:", error);
       showNotification(error.message, "error");
     }
   };

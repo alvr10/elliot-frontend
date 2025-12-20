@@ -1,4 +1,4 @@
-import { Colors, Spacing, Typography } from "@/constants";
+import { AppTheme, Spacing, Typography } from "@/constants";
 import { useAuth } from "@/hooks";
 import { caffeineApi } from "@/services/api";
 import { useRouter } from "expo-router";
@@ -21,16 +21,16 @@ interface DailyTotal {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: AppTheme.background,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: Colors.black,
+    backgroundColor: AppTheme.background,
     justifyContent: "center",
     alignItems: "center",
   },
   loadingText: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.lg,
   },
   header: {
@@ -40,15 +40,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray800,
+    borderBottomColor: AppTheme.border,
   },
   headerTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
   },
   backButton: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.lg,
   },
   scrollView: {
@@ -59,13 +59,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   chartTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     marginBottom: Spacing.md,
   },
   chartWrapper: {
-    backgroundColor: Colors.gray900,
+    backgroundColor: AppTheme.surface,
     borderRadius: 8,
     padding: Spacing.md,
     position: "relative",
@@ -74,13 +74,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Spacing.sm,
     right: Spacing.sm,
-    backgroundColor: Colors.overlay,
+    backgroundColor: AppTheme.background,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
     borderRadius: 4,
   },
   dailyLimitText: {
-    color: Colors.gray400,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.xs,
   },
   statsContainer: {
@@ -88,17 +88,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   sectionTitle: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     marginBottom: Spacing.md,
   },
   statCard: {
-    backgroundColor: Colors.gray900,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.md,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.gray700,
+    borderColor: AppTheme.border,
     marginBottom: Spacing.md,
   },
   statRow: {
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statLabel: {
-    color: Colors.gray300,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.base,
   },
   statValue: {
@@ -115,13 +115,13 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   statValueNormal: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
   },
   statValueSuccess: {
-    color: Colors.success,
+    color: AppTheme.success,
   },
   statValueDanger: {
-    color: Colors.error,
+    color: AppTheme.error,
   },
   recentDaysContainer: {
     paddingHorizontal: Spacing.lg,
@@ -129,23 +129,23 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing["2xl"],
   },
   emptyState: {
-    backgroundColor: Colors.gray900,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.lg,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.gray700,
+    borderColor: AppTheme.border,
   },
   emptyStateText: {
-    color: Colors.gray400,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.base,
     textAlign: "center",
   },
   dayItem: {
-    backgroundColor: Colors.gray900,
+    backgroundColor: AppTheme.surface,
     padding: Spacing.md,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.gray700,
+    borderColor: AppTheme.border,
     marginBottom: Spacing.sm,
   },
   dayRow: {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dayDate: {
-    color: Colors.white,
+    color: AppTheme.text.primary,
     fontSize: Typography.size.base,
     fontWeight: Typography.weight.medium,
   },
@@ -166,14 +166,14 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   dayDifference: {
-    color: Colors.gray400,
+    color: AppTheme.text.secondary,
     fontSize: Typography.size.xs,
   },
 });
 
 export default function HistoryScreen() {
   const [dailyTotals, setDailyTotals] = useState<DailyTotal>({});
-  const [dailyLimit, setDailyLimit] = useState(400); // USER'S CUSTOM LIMIT
+  const [dailyLimit, setDailyLimit] = useState(400);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { user } = useAuth();
@@ -181,27 +181,24 @@ export default function HistoryScreen() {
   useEffect(() => {
     if (user) {
       fetchHistory();
-      fetchDailyLimit(); // FETCH USER'S DAILY LIMIT
+      fetchDailyLimit();
     }
   }, [user]);
 
-  // NEW FUNCTION: Fetch user's daily limit using API
   const fetchDailyLimit = async () => {
     try {
       const response = await caffeineApi.getDailyLimit();
-      setDailyLimit(response.dailyCaffeineLimit || 400);
+      setDailyLimit(response.dailyLimitMg || 400);
     } catch (error) {
       console.error("Failed to fetch daily limit:", error);
     }
   };
 
-  // NEW FUNCTION: Fetch history using API
   const fetchHistory = async () => {
     try {
       console.log("Fetching history...");
       const historyData = await caffeineApi.getIntakeHistory();
 
-      // Transform the API response to match our expected format
       const transformedData: DailyTotal = {};
       historyData.forEach(item => {
         const date = new Date(item.consumedAt).toISOString().split("T")[0];
@@ -253,7 +250,6 @@ export default function HistoryScreen() {
     ],
   };
 
-  // Calculate stats with safe number handling - USE CUSTOM DAILY LIMIT
   const validTotals = Object.values(dailyTotals)
     .filter(total => !isNaN(Number(total)) && isFinite(Number(total)))
     .map(total => Number(total));
@@ -263,7 +259,7 @@ export default function HistoryScreen() {
     totalDays > 0
       ? Math.round(validTotals.reduce((a, b) => a + b, 0) / totalDays)
       : 0;
-  const daysOverLimit = validTotals.filter(total => total > dailyLimit).length; // USE CUSTOM LIMIT
+  const daysOverLimit = validTotals.filter(total => total > dailyLimit).length;
   const maxIntake = validTotals.length > 0 ? Math.max(...validTotals) : 0;
 
   if (loading) {
@@ -296,9 +292,9 @@ export default function HistoryScreen() {
                 width={screenWidth - 80}
                 height={200}
                 chartConfig={{
-                  backgroundColor: Colors.gray900,
-                  backgroundGradientFrom: Colors.gray900,
-                  backgroundGradientTo: Colors.gray900,
+                  backgroundColor: AppTheme.surface,
+                  backgroundGradientFrom: AppTheme.surface,
+                  backgroundGradientTo: AppTheme.surface,
                   decimalPlaces: 0,
                   color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                   labelColor: (opacity = 1) =>
@@ -309,7 +305,10 @@ export default function HistoryScreen() {
                   propsForDots: {
                     r: "4",
                     strokeWidth: "2",
-                    stroke: Colors.white,
+                    stroke: AppTheme.primary,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: "",
                   },
                 }}
                 bezier

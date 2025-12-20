@@ -209,7 +209,7 @@ export default function AuthScreen() {
                   (authMode === "signup" && !validateName(name))
                 }
               >
-                {authMode === "signup" ? "Registrarse" : "Enviar enlace mágico"}
+                {authMode === "signup" ? "Registrarse" : "Iniciar sesión"}
               </Button>
 
               <TouchableOpacity

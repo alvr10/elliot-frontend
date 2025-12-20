@@ -9,109 +9,34 @@ import {
   Alert,
   Image,
   Linking,
+  PanResponder,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  bottomSheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "90%",
-    backgroundColor: AppTheme.primary,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: Spacing.md,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    alignItems: "center",
-    paddingVertical: Spacing.md,
-  },
-  title: {
-    color: AppTheme.secondary,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-  },
-  closeButton: {
-    position: "absolute",
-    top: Spacing.md,
-    right: Spacing.md,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeText: {
-    color: AppTheme.secondary,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  card: {
-    backgroundColor: AppTheme.background,
-    borderRadius: 16,
-    marginBottom: Spacing.md,
-    padding: Spacing.md,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.sm,
-  },
-  legalText: {
-    color: AppTheme.text.primary,
-    fontWeight: Typography.weight.semibold,
-    fontSize: Typography.size.base,
-  },
-  imageContainer: {
-    alignItems: "center",
-    marginVertical: Spacing.md,
-  },
-  image: {
-    width: 200,
-    height: 200,
-    resizeMode: "contain",
-  },
-  legalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
-  },
-  buttonText: {
-    color: AppTheme.text.secondary,
-    fontSize: Typography.size.base,
-  },
-  dangerText: {
-    color: AppTheme.error,
-    fontSize: Typography.size.base,
-  },
-});
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const router = useRouter();
   const { subscription, signOut } = useAuth();
   const { showNotification } = useNotification();
+  const insets = useSafeAreaInsets();
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      // Only respond to horizontal swipes
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      // Check if it's a swipe to the right with sufficient distance and velocity
+      if (gestureState.dx > 50 && gestureState.vx > 0.3) {
+        router.back();
+      }
+    },
+  });
 
   const handleSignOut = () => {
     Alert.alert(
@@ -158,144 +83,252 @@ export default function SettingsScreen() {
   const getSubscriptionStatusDisplay = () => {
     switch (subscription?.status) {
       case "active":
-        return { text: "Beta Access Active", color: AppTheme.success };
+        return { text: "ACCESO BETA ACTIVO", color: AppTheme.success };
       case "active_until_period_end":
         return {
-          text: "Beta Access Active",
+          text: "ACCESO BETA ACTIVO",
           color: AppTheme.warning,
         };
       case "cancelled":
-        return { text: "Beta Access Ended", color: AppTheme.error };
+        return { text: "ACCESO BETA FINALIZADO", color: AppTheme.error };
       default:
-        return { text: "No Beta Access", color: AppTheme.text.disabled };
+        return { text: "SIN ACCESO BETA", color: AppTheme.text.disabled };
     }
   };
 
   const subscriptionStatus = getSubscriptionStatusDisplay();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.bottomSheet}>
-        <SafeAreaView style={styles.safeArea}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Ajustes</Text>
-          </View>
-
+    <View
+      style={[styles.container, { paddingTop: insets.top }]}
+      {...panResponder.panHandlers}
+    >
+      <View style={styles.content}>
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.closeButton}
+            style={styles.backButton}
           >
-            <Text style={styles.closeText}>×</Text>
+            <MaterialIcons
+              name="arrow-back"
+              size={24}
+              color={AppTheme.secondary}
+            />
           </TouchableOpacity>
+          <Text style={styles.title}>Ajustes</Text>
+        </View>
 
-          <ScrollView style={styles.scrollView}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={require("../../assets/images/elliot.png")}
-                style={styles.image}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.imageContainer}>
+            <Image
+              source={require("../../assets/images/elliot.png")}
+              style={styles.image}
+            />
+          </View>
+
+          <View style={styles.statusCard}>
+            <Text style={styles.buttonText}>Plan actual</Text>
+            <Text
+              style={[styles.statusText, { color: subscriptionStatus.color }]}
+            >
+              {subscriptionStatus.text}
+            </Text>
+          </View>
+
+          <Card
+            icon="star"
+            title="Valóranos"
+            element={
+              <TouchableOpacity
+                onPress={() =>
+                  Linking.openURL(
+                    "https://play.google.com/store/apps/details?id=com.elliot-cafe"
+                  )
+                }
+              >
+                <Text style={styles.buttonText}>Valorar</Text>
+              </TouchableOpacity>
+            }
+          />
+
+          {/*<Card
+            icon="notifications"
+            title="Notificaciones"
+            element={
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
               />
-            </View>
+            }
+          />*/}
 
-            <Card
-              icon="star"
-              title="Valóranos"
-              element={
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(
-                      "https://play.google.com/store/apps/details?id=com.elliot-cafe"
-                    )
-                  }
-                >
-                  <Text style={styles.buttonText}>Valorar</Text>
-                </TouchableOpacity>
-              }
-            />
-
-            <Card
-              icon="notifications"
-              title="Notificaciones"
-              element={
-                <Switch
-                  value={notificationsEnabled}
-                  onValueChange={setNotificationsEnabled}
-                />
-              }
-            />
-
-            <Card
-              icon="edit"
-              title="Modificar ingesta diaria"
-              element={
-                <TouchableOpacity onPress={() => router.push("/daily-limit")}>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color={AppTheme.text.secondary}
-                  />
-                </TouchableOpacity>
-              }
-            />
-
-            <View style={styles.card}>
-              <TouchableOpacity
-                style={styles.legalRow}
-                onPress={() => openLink("https://elliot-cafe.com/terms")}
-              >
-                <Text style={styles.legalText}>Términos y condiciones</Text>
+          <Card
+            icon="edit"
+            title="Modificar ingesta diaria"
+            element={
+              <TouchableOpacity onPress={() => router.push("/daily-limit")}>
                 <MaterialIcons
                   name="chevron-right"
                   size={24}
                   color={AppTheme.text.secondary}
                 />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.legalRow}
-                onPress={() => openLink("https://elliot-cafe.com/privacy")}
-              >
-                <Text style={styles.legalText}>Política de privacidad</Text>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={24}
-                  color={AppTheme.text.secondary}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.legalRow}
-                onPress={() => openLink("https://elliot-cafe.com/about")}
-              >
-                <Text style={styles.legalText}>Sobre nosotros</Text>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={24}
-                  color={AppTheme.text.secondary}
-                />
-              </TouchableOpacity>
-            </View>
+            }
+          />
 
-            <Card
-              icon="logout"
-              title="Cerrar sesión"
-              element={
-                <TouchableOpacity onPress={handleSignOut}>
-                  <Text style={styles.buttonText}>Cerrar</Text>
-                </TouchableOpacity>
-              }
-            />
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.legalRow}
+              onPress={() => openLink("https://elliot-cafe.com/terms")}
+            >
+              <Text style={styles.legalText}>Términos y condiciones</Text>
+              <MaterialIcons
+                name="chevron-right"
+                size={24}
+                color={AppTheme.text.secondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.legalRow}
+              onPress={() => openLink("https://elliot-cafe.com/privacy")}
+            >
+              <Text style={styles.legalText}>Política de privacidad</Text>
+              <MaterialIcons
+                name="chevron-right"
+                size={24}
+                color={AppTheme.text.secondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.legalRow}
+              onPress={() => openLink("https://elliot-cafe.com/about")}
+            >
+              <Text style={styles.legalText}>Sobre nosotros</Text>
+              <MaterialIcons
+                name="chevron-right"
+                size={24}
+                color={AppTheme.text.secondary}
+              />
+            </TouchableOpacity>
+          </View>
 
-            <Card
-              icon="delete"
-              title="Eliminar cuenta"
-              element={
-                <TouchableOpacity onPress={handleDeleteAccount}>
-                  <Text style={styles.dangerText}>Eliminar</Text>
-                </TouchableOpacity>
-              }
-            />
-          </ScrollView>
-        </SafeAreaView>
+          <Card
+            icon="logout"
+            title="Cerrar sesión"
+            element={
+              <TouchableOpacity onPress={handleSignOut}>
+                <Text style={styles.buttonText}>Cerrar</Text>
+              </TouchableOpacity>
+            }
+          />
+
+          <Card
+            icon="delete"
+            title="Eliminar cuenta"
+            element={
+              <TouchableOpacity onPress={handleDeleteAccount}>
+                <Text style={styles.dangerText}>Eliminar</Text>
+              </TouchableOpacity>
+            }
+          />
+        </ScrollView>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppTheme.primary,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+  },
+  header: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    position: "relative",
+  },
+  title: {
+    color: AppTheme.secondary,
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  backButton: {
+    position: "absolute",
+    top: Spacing.md,
+    left: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backText: {
+    color: AppTheme.secondary,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  card: {
+    backgroundColor: AppTheme.background,
+    borderRadius: 16,
+    marginBottom: Spacing.md,
+    padding: Spacing.md,
+  },
+  statusCard: {
+    backgroundColor: AppTheme.background,
+    borderRadius: 16,
+    marginBottom: Spacing.md,
+    padding: Spacing.md,
+    alignItems: "flex-start",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  legalText: {
+    color: AppTheme.text.primary,
+    fontWeight: Typography.weight.semibold,
+    fontSize: Typography.size.base,
+  },
+  imageContainer: {
+    alignItems: "center",
+    marginTop: Spacing.md,
+    marginBottom: -Spacing["3xl"],
+  },
+  image: {
+    width: 250,
+    height: 250,
+    resizeMode: "contain",
+  },
+  legalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+  },
+  buttonText: {
+    color: AppTheme.text.secondary,
+    fontSize: Typography.size.base,
+  },
+  statusText: {
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+  },
+  dangerText: {
+    color: AppTheme.error,
+    fontSize: Typography.size.base,
+  },
+});
