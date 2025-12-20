@@ -1,11 +1,12 @@
 import { AuthStep, LandingStep } from "@/components";
 import { Colors, Spacing, Typography } from "@/constants";
-import { useNotification, useSubscription } from "@/context";
+import { useSubscription } from "@/context";
 import { useAuth } from "@/hooks";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 type FlowStep = "landing" | "auth";
 type AuthMode = "signin" | "signup";
@@ -34,7 +35,6 @@ export default function BetaAccessScreen() {
     refreshSubscription,
     subscriptionLoading,
   } = useAuth();
-  const { showNotification } = useNotification();
   const { createSubscription } = useSubscription();
 
   const [currentStep, setCurrentStep] = useState<FlowStep>("landing");
@@ -91,20 +91,24 @@ export default function BetaAccessScreen() {
 
       // Force redirect to sign-in page on 401 error
       if (error?.response?.status === 401) {
-        showNotification(
-          "Authentication error. Redirecting to sign-in...",
-          "error"
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error de autenticación. Redirigiendo a iniciar sesión...",
+          position: "top",
+          visibilityTime: 3000,
+        });
         router.replace("/auth/sign-in");
         return;
       }
 
       // Navigate back to landing page on other errors
       setCurrentStep("landing");
-      showNotification(
-        "Error setting up beta access. Please try again.",
-        "error"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error al configurar acceso beta. Por favor intenta de nuevo.",
+        position: "top",
+        visibilityTime: 3000,
+      });
     } finally {
       setIsSettingUpBeta(false);
     }
@@ -129,14 +133,24 @@ export default function BetaAccessScreen() {
 
     if (!email) {
       console.log("Email validation failed in BetaAccessScreen");
-      showNotification("Por favor ingresa tu correo electrónico", "error");
+      Toast.show({
+        type: "error",
+        text1: "Por favor ingresa tu correo electrónico",
+        position: "top",
+        visibilityTime: 3000,
+      });
       return;
     }
 
     // Only validate name for signup mode
     if (mode === "signup" && (!name || name.trim().length < 2)) {
       console.log("Name validation failed in BetaAccessScreen");
-      showNotification("Por favor ingresa tu nombre completo", "error");
+      Toast.show({
+        type: "error",
+        text1: "Por favor ingresa tu nombre completo",
+        position: "top",
+        visibilityTime: 3000,
+      });
       return;
     }
 
@@ -151,7 +165,12 @@ export default function BetaAccessScreen() {
       // Beta access will be set up automatically in the useEffect
     } catch (error: any) {
       console.log("Auth error in BetaAccessScreen:", error);
-      showNotification(error.message, "error");
+      Toast.show({
+        type: "error",
+        text1: error.message,
+        position: "top",
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -161,10 +180,12 @@ export default function BetaAccessScreen() {
       // Beta access will be set up automatically in the useEffect
     } catch (error: any) {
       console.log("Google auth error:", error);
-      showNotification(
-        error.message || "Error al iniciar sesión con Google",
-        "error"
-      );
+      Toast.show({
+        type: "error",
+        text1: error.message || "Error al iniciar sesión con Google",
+        position: "top",
+        visibilityTime: 3000,
+      });
     }
   };
 

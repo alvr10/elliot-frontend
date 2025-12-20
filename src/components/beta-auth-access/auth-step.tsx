@@ -26,7 +26,6 @@ interface AuthStepProps {
 const AuthStep: React.FC<AuthStepProps> = ({
   onBack,
   onAuth,
-  onGoogleAuth,
   loading,
   initialMode = "signup",
 }) => {

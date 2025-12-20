@@ -5,7 +5,8 @@ import { subscriptionApi } from "@/services/api/v1/subscription.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session } from "@supabase/supabase-js";
 import { PropsWithChildren, useCallback, useEffect, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
+import Toast from "react-native-toast-message";
 
 interface User {
   id: string;
@@ -249,11 +250,15 @@ export default function AuthProvider({ children }: PropsWithChildren) {
 
       if (error) throw error;
 
-      console.log("Magic link sent successfully, showing alert");
-      Alert.alert(
-        "Check your email",
-        "We sent you a magic link. Please check your email and click the link to sign in."
-      );
+      console.log("Magic link sent successfully, showing toast");
+      Toast.show({
+        type: "success",
+        text1: "Revisa tu correo electrónico",
+        text2:
+          "Te enviamos un enlace mágico. Por favor revisa tu correo y haz clic en el enlace para iniciar sesión.",
+        position: "top",
+        visibilityTime: 4000,
+      });
     } catch (error: any) {
       console.error("Error requesting magic link:", error);
       throw new Error(error.message || "Failed to send magic link");
@@ -278,37 +283,17 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         throw error;
       }
 
-      Alert.alert(
-        "Check your email",
-        "We sent you a magic link. Please check your email and click the link to verify your account."
-      );
+      Toast.show({
+        type: "success",
+        text1: "Revisa tu correo electrónico",
+        text2:
+          "Te enviamos un enlace mágico. Por favor revisa tu correo y haz clic en el enlace para verificar tu cuenta.",
+        position: "top",
+        visibilityTime: 4000,
+      });
     } catch (error: any) {
       console.error("Error registering:", error);
       throw new Error(error.message || "Failed to register");
-    }
-  };
-
-  const signInWithGoogle = async () => {
-    try {
-      console.log("Signing in with Google...");
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: process.env.EXPO_PUBLIC_SUPABASE_REDIRECT_URI,
-          queryParams: {
-            app: "true",
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      console.log("Google sign in initiated:", data);
-      // Note: For mobile apps, this will open the browser/OAuth flow
-      // The result will be handled by the auth state change listener
-    } catch (error: any) {
-      console.error("Error signing in with Google:", error);
-      throw new Error(error.message || "Failed to sign in with Google");
     }
   };
 
@@ -430,7 +415,6 @@ export default function AuthProvider({ children }: PropsWithChildren) {
         isLoggedIn: session !== undefined,
         signInWithEmail,
         signUpWithEmail,
-        signInWithGoogle,
         signOut,
         refreshSubscription,
         getCurrentToken,

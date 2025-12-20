@@ -1,6 +1,5 @@
 import { Button } from "@/components";
 import { AppTheme, Spacing, Typography } from "@/constants";
-import { useNotification } from "@/context";
 import { useAuth } from "@/hooks";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,12 +13,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 type AuthMode = "signin" | "signup";
 
 export default function AuthScreen() {
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
-  const { showNotification } = useNotification();
+  const { signInWithEmail, signUpWithEmail } = useAuth();
 
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
   const [email, setEmail] = useState("");
@@ -79,164 +78,160 @@ export default function AuthScreen() {
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
-      showNotification(error.message, "error");
+      Toast.show({
+        type: "error",
+        text1: error.message,
+        position: "top",
+        visibilityTime: 3000,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error: any) {
-      console.log("Google auth error:", error);
-      showNotification(
-        error.message || "Error al iniciar sesión con Google",
-        "error"
-      );
-    }
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoiding}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+    <>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoiding}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Elliot</Text>
-              <Text style={styles.subtitle}>
-                Toma el control de tu consumo de cafeína
-              </Text>
-            </View>
-
-            {/* Auth Form */}
-            <View style={styles.authContent}>
-              <Text style={styles.authTitle}>
-                {authMode === "signup"
-                  ? "Crea Tu Cuenta"
-                  : "Bienvenido de Vuelta"}
-              </Text>
-              <Text style={styles.authSubtitle}>
-                {authMode === "signup"
-                  ? "Únete a miles tomando control de su consumo de cafeína"
-                  : "Inicia sesión para continuar tu viaje"}
-              </Text>
-
-              {/*<TouchableOpacity
-                style={[styles.googleButton, { marginBottom: Spacing.lg }]}
-                onPress={handleGoogleAuth}
-                activeOpacity={0.8}
-                disabled={isSubmitting}
-                accessibilityLabel="Continuar con Google"
-                accessibilityRole="button"
-              >
-                <FontAwesome name="google" size={24} color={AppTheme.primary} />
-                <Text style={styles.googleButtonText}>
-                  Continuar con Google
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.content}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>Elliot</Text>
+                <Text style={styles.subtitle}>
+                  Toma el control de tu consumo de cafeína
                 </Text>
-              </TouchableOpacity>*/}
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>o</Text>
-                <View style={styles.dividerLine} />
               </View>
 
-              <View>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Dirección de correo electrónico"
-                  placeholderTextColor="#6B7280"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={[
-                    styles.textInput,
-                    emailError ? styles.inputError : null,
-                    isSubmitting ? styles.inputDisabled : null,
-                  ]}
-                  editable={!isSubmitting}
-                  accessibilityLabel="Correo electrónico"
-                  accessibilityHint="Ingresa tu dirección de correo electrónico"
-                />
-                {emailError ? (
-                  <Text style={styles.errorText}>{emailError}</Text>
-                ) : null}
-              </View>
+              {/* Auth Form */}
+              <View style={styles.authContent}>
+                <Text style={styles.authTitle}>
+                  {authMode === "signup"
+                    ? "Crea Tu Cuenta"
+                    : "Bienvenido de Vuelta"}
+                </Text>
+                <Text style={styles.authSubtitle}>
+                  {authMode === "signup"
+                    ? "Únete a miles tomando control de su consumo de cafeína"
+                    : "Inicia sesión para continuar tu viaje"}
+                </Text>
 
-              {authMode === "signup" && (
+                {/*<TouchableOpacity
+                  style={[styles.googleButton, { marginBottom: Spacing.lg }]}
+                  onPress={handleGoogleAuth}
+                  activeOpacity={0.8}
+                  disabled={isSubmitting}
+                  accessibilityLabel="Continuar con Google"
+                  accessibilityRole="button"
+                >
+                  <FontAwesome name="google" size={24} color={AppTheme.primary} />
+                  <Text style={styles.googleButtonText}>
+                    Continuar con Google
+                  </Text>
+                </TouchableOpacity>*/}
+
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>o</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
                 <View>
                   <TextInput
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Nombre completo"
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Dirección de correo electrónico"
                     placeholderTextColor="#6B7280"
-                    autoCapitalize="words"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     style={[
                       styles.textInput,
                       emailError ? styles.inputError : null,
                       isSubmitting ? styles.inputDisabled : null,
                     ]}
                     editable={!isSubmitting}
-                    accessibilityLabel="Nombre completo"
-                    accessibilityHint="Ingresa tu nombre completo"
+                    accessibilityLabel="Correo electrónico"
+                    accessibilityHint="Ingresa tu dirección de correo electrónico"
                   />
+                  {emailError ? (
+                    <Text style={styles.errorText}>{emailError}</Text>
+                  ) : null}
                 </View>
-              )}
 
-              <Button
-                variant="primary"
-                onPress={handleAuth}
-                loading={isSubmitting}
-                loadingText={
-                  authMode === "signup"
-                    ? "Enviando enlace mágico..."
-                    : "Enviando enlace mágico..."
-                }
-                disabled={
-                  !!emailError ||
-                  !email ||
-                  (authMode === "signup" && !validateName(name))
-                }
-              >
-                {authMode === "signup" ? "Registrarse" : "Iniciar sesión"}
-              </Button>
+                {authMode === "signup" && (
+                  <View>
+                    <TextInput
+                      value={name}
+                      onChangeText={setName}
+                      placeholder="Nombre completo"
+                      placeholderTextColor="#6B7280"
+                      autoCapitalize="words"
+                      style={[
+                        styles.textInput,
+                        emailError ? styles.inputError : null,
+                        isSubmitting ? styles.inputDisabled : null,
+                      ]}
+                      editable={!isSubmitting}
+                      accessibilityLabel="Nombre completo"
+                      accessibilityHint="Ingresa tu nombre completo"
+                    />
+                  </View>
+                )}
 
-              <TouchableOpacity
-                onPress={() =>
-                  setAuthMode(authMode === "signup" ? "signin" : "signup")
-                }
-                disabled={isSubmitting}
-                accessibilityLabel={
-                  authMode === "signup"
-                    ? "Cambiar a inicio de sesión"
-                    : "Cambiar a registro"
-                }
-                accessibilityRole="button"
-              >
-                <Text style={styles.switchAuthText}>
-                  {authMode === "signup"
-                    ? "¿Ya tienes una cuenta? "
-                    : "¿No tienes una cuenta? "}
-                  <Text style={styles.switchAuthLink}>
-                    {authMode === "signup" ? "Iniciar Sesión" : "Registrarse"}
+                <Button
+                  variant="primary"
+                  onPress={handleAuth}
+                  loading={isSubmitting}
+                  loadingText={
+                    authMode === "signup"
+                      ? "Enviando enlace mágico..."
+                      : "Enviando enlace mágico..."
+                  }
+                  disabled={
+                    !!emailError ||
+                    !email ||
+                    (authMode === "signup" && !validateName(name))
+                  }
+                >
+                  {authMode === "signup" ? "Registrarse" : "Iniciar sesión"}
+                </Button>
+
+                <TouchableOpacity
+                  onPress={() =>
+                    setAuthMode(authMode === "signup" ? "signin" : "signup")
+                  }
+                  disabled={isSubmitting}
+                  accessibilityLabel={
+                    authMode === "signup"
+                      ? "Cambiar a inicio de sesión"
+                      : "Cambiar a registro"
+                  }
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.switchAuthText}>
+                    {authMode === "signup"
+                      ? "¿Ya tienes una cuenta? "
+                      : "¿No tienes una cuenta? "}
+                    <Text style={styles.switchAuthLink}>
+                      {authMode === "signup" ? "Iniciar Sesión" : "Registrarse"}
+                    </Text>
                   </Text>
-                </Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+      <Toast />
+    </>
   );
 }
 

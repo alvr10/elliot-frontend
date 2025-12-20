@@ -14,10 +14,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://ppltaqzdiygcjkuphxrh.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_30kTeSK_1TffmhQTIL9bgQ_v5E3BoSU",
-        "EXPO_PUBLIC_API_URL": "https://api.elliot-cafe.com",
-        "EXPO_PUBLIC_SUPABASE_REDIRECT_URI": "elliot-caffeine-tracker://auth"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://opqsdptktnswyitvpuxw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_O2UxyRMrp9klgJeMW-f3tg_pKxeEPAu",
+        "EXPO_PUBLIC_API_URL": "https://api.elliot-cafe.com"
       }
     },
     "apk": {
@@ -25,10 +24,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://ppltaqzdiygcjkuphxrh.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_30kTeSK_1TffmhQTIL9bgQ_v5E3BoSU",
-        "EXPO_PUBLIC_API_URL": "https://api.elliot-cafe.com",
-        "EXPO_PUBLIC_SUPABASE_REDIRECT_URI": "elliot-caffeine-tracker://auth"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://opqsdptktnswyitvpuxw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_O2UxyRMrp9klgJeMW-f3tg_pKxeEPAu",
+        "EXPO_PUBLIC_API_URL": "https://api.elliot-cafe.com"
       }
     },
     "preview": {
@@ -37,10 +35,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://ppltaqzdiygcjkuphxrh.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_30kTeSK_1TffmhQTIL9bgQ_v5E3BoSU",
-        "EXPO_PUBLIC_API_URL": "https://api.elliot-cafe.com",
-        "EXPO_PUBLIC_SUPABASE_REDIRECT_URI": "elliot-caffeine-tracker://auth"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://opqsdptktnswyitvpuxw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_O2UxyRMrp9klgJeMW-f3tg_pKxeEPAu",
+        "EXPO_PUBLIC_API_URL": "https://api.elliot-cafe.com"
       }
     }
   },

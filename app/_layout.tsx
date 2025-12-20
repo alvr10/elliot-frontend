@@ -1,5 +1,5 @@
 import { SplashScreenController } from "@/components";
-import { NotificationProvider, SubscriptionProvider } from "@/context";
+import { SubscriptionProvider } from "@/context";
 import { useAuth } from "@/hooks";
 import { supabase } from "@/lib/supabase";
 import { AuthProvider } from "@/providers";
@@ -7,17 +7,17 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Linking } from "react-native";
+import Toast from "react-native-toast-message";
 
 // This is the root layout that wraps our entire app
 export default function RootLayout() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
-        <NotificationProvider>
-          <SplashScreenController />
-          <StatusBar style="dark" backgroundColor="#000000" />
-          <RootLayoutNav />
-        </NotificationProvider>
+        <SplashScreenController />
+        <StatusBar style="dark" backgroundColor="#000000" />
+        <RootLayoutNav />
+        <Toast />
       </SubscriptionProvider>
     </AuthProvider>
   );

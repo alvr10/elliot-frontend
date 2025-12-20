@@ -30,7 +30,6 @@ export type AuthData = {
   isLoggedIn: boolean;
   signInWithEmail: (email: string) => Promise<void>;
   signUpWithEmail: (email: string, name: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
   getCurrentToken: () => Promise<string | null>;
@@ -48,7 +47,6 @@ export const AuthContext = createContext<AuthData>({
   isLoggedIn: false,
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
-  signInWithGoogle: async () => {},
   signOut: async () => {},
   refreshSubscription: async () => {},
   getCurrentToken: async () => null,

@@ -1,7 +1,6 @@
 import { Card } from "@/components";
 import SignOutButton from "@/components/socia-auth-buttons/sign-out-button";
 import { AppTheme, Spacing, Typography } from "@/constants";
-import { useNotification } from "@/context";
 import { useAuth } from "@/hooks";
 import { caffeineApi } from "@/services/api/v1/caffeine.api";
 import { userApi } from "@/services/api/v1/user.api";
@@ -22,11 +21,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { subscription, signOut } = useAuth();
-  const { showNotification } = useNotification();
   const insets = useSafeAreaInsets();
   const [dailyLimit, setDailyLimit] = useState<number>(0);
   const [showDailyLimitModal, setShowDailyLimitModal] = useState(false);
@@ -82,13 +81,20 @@ export default function SettingsScreen() {
 
               // Sign out after successful deletion
               await signOut();
-              showNotification("Cuenta eliminada exitosamente", "success");
+              Toast.show({
+                type: "success",
+                text1: "Cuenta eliminada exitosamente",
+                position: "top",
+                visibilityTime: 3000,
+              });
             } catch (error: any) {
               console.error("Error deleting account:", error);
-              showNotification(
-                error.message || "Error al eliminar la cuenta",
-                "error"
-              );
+              Toast.show({
+                type: "error",
+                text1: error.message || "Error al eliminar la cuenta",
+                position: "top",
+                visibilityTime: 3000,
+              });
             } finally {
               setLoading(false);
             }
@@ -102,12 +108,22 @@ export default function SettingsScreen() {
     const limit = parseInt(tempDailyLimit);
 
     if (isNaN(limit) || limit <= 0) {
-      showNotification("Por favor ingresa un límite válido", "error");
+      Toast.show({
+        type: "error",
+        text1: "Por favor ingresa un límite válido",
+        position: "top",
+        visibilityTime: 3000,
+      });
       return;
     }
 
     if (limit > 1000) {
-      showNotification("El límite diario no puede exceder 1000mg", "error");
+      Toast.show({
+        type: "error",
+        text1: "El límite diario no puede exceder 1000mg",
+        position: "top",
+        visibilityTime: 3000,
+      });
       return;
     }
 
@@ -116,13 +132,20 @@ export default function SettingsScreen() {
       await caffeineApi.updateDailyLimit({ dailyCaffeineLimit: limit });
       setDailyLimit(limit);
       setShowDailyLimitModal(false);
-      showNotification("Límite diario actualizado exitosamente", "success");
+      Toast.show({
+        type: "success",
+        text1: "Límite diario actualizado exitosamente",
+        position: "top",
+        visibilityTime: 3000,
+      });
     } catch (error: any) {
       console.error("Error updating daily limit:", error);
-      showNotification(
-        error.message || "Error al actualizar el límite diario",
-        "error"
-      );
+      Toast.show({
+        type: "error",
+        text1: error.message || "Error al actualizar el límite diario",
+        position: "top",
+        visibilityTime: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -130,7 +153,12 @@ export default function SettingsScreen() {
 
   const openLink = (url: string) => {
     Linking.openURL(url).catch(() => {
-      showNotification("Could not open link", "error");
+      Toast.show({
+        type: "error",
+        text1: "No se pudo abrir el enlace",
+        position: "top",
+        visibilityTime: 3000,
+      });
     });
   };
 
@@ -279,7 +307,12 @@ export default function SettingsScreen() {
                 title="Cerrar"
                 showIcon={true}
                 onPress={() =>
-                  showNotification("Sesión cerrada exitosamente", "info")
+                  Toast.show({
+                    type: "info",
+                    text1: "Sesión cerrada exitosamente",
+                    position: "top",
+                    visibilityTime: 3000,
+                  })
                 }
               />
             }
